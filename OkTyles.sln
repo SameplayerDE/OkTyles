@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OkTyles", "OkTyles\OkTyles.csproj", "{6C4C9BC5-08EA-460F-8670-5F5F0CB8CC2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bembelbuben.Core", "Bembelbuben.Core\Bembelbuben.Core.csproj", "{535ED2C8-BB25-4489-B461-C79C02015528}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6C4C9BC5-08EA-460F-8670-5F5F0CB8CC2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C4C9BC5-08EA-460F-8670-5F5F0CB8CC2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C4C9BC5-08EA-460F-8670-5F5F0CB8CC2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C4C9BC5-08EA-460F-8670-5F5F0CB8CC2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{535ED2C8-BB25-4489-B461-C79C02015528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{535ED2C8-BB25-4489-B461-C79C02015528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{535ED2C8-BB25-4489-B461-C79C02015528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{535ED2C8-BB25-4489-B461-C79C02015528}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {667A4690-1A0E-484F-8ABB-B6E7A1A9A4B3}
+	EndGlobalSection
+EndGlobal

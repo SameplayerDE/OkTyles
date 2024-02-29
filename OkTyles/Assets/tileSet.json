@@ -1,0 +1,8 @@
+{
+  "TexturePath": "output.png",
+  "TileWidth": 16,
+  "TileHeight": 16,
+  "TileCount": 485,
+  "TilesPerRow": 23,
+  "TilesPerColumn": 23
+}
