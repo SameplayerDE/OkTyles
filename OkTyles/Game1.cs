@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Windows.Markup;
 using System.Xml.Linq;
+using OkTyles.Core.Commands;
 
 namespace OkTyles;
 
@@ -31,6 +32,7 @@ public class Game1 : Game
     public World World;
     public TileSet TileSet;
     public Camera _prevCamera;
+    public CommandInvoker CommandInvoker;
     public bool InBounds => GetSelectedCellX() != -1 && GetSelectedCellY() != -1;
     public bool Test = false;
 
@@ -80,7 +82,8 @@ public class Game1 : Game
         _camera = new Camera(GraphicsDevice);
         _prevCamera = _camera.Copy();
         _uiRenderer = new UserInterfaceRenderer();
-
+        CommandInvoker = new CommandInvoker();
+        
         Context.Pixel = _pixel;
         Context.GraphicsDevice = GraphicsDevice;
         Context.Input = new InputHandle();
@@ -334,6 +337,14 @@ public class Game1 : Game
             _camera.Y -= delta.Y;
         }
 
+        if (Context.Input.IsKeyDown(Keys.LeftControl))
+        {
+            if (Context.Input.IsKeyPressed(Keys.Z))
+            {
+                CommandInvoker.Undo();
+            }
+        }
+        
         if (Context.Input.IsLeftMouseDown())
         {
             if (InBounds)
@@ -346,13 +357,19 @@ public class Game1 : Game
                         SelectedTileId = tileId;
                     }
                 }
+                else if (EditorMode == EditorMode.World && EditMode == EditMode.Set)
+                {
+                    var oldTile = World.GetTileTexture(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
+                    if (oldTile != SelectedTileId)
+                    {
+                        var command = new SetTileCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                            oldTile, SelectedTileId);
+                        CommandInvoker.ExecuteCommand(command);
+                    }
+                }
                 else if (EditorMode == EditorMode.World)
                 {
-                    if (EditMode == EditMode.Set)
-                    {
-                        World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), SelectedTileId, ActiveLayer);
-                    }
-                    else if (EditMode == EditMode.Remove)
+                    if (EditMode == EditMode.Remove)
                     {
                         World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), 0, ActiveLayer);
                     }
