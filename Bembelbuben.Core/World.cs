@@ -72,7 +72,33 @@ public class World
         Layers[layer][x, y] &= 0b11111111_11111100_11111111_11111111;
         Layers[layer][x, y] |= value << 16;
     }
-        
+
+    public void Rotate(int x, int y, int layer)
+    {
+        var mirrorState = GetTileMirror(x, y, layer);
+        uint mirrorValue = 0u;
+        switch (mirrorState)
+        {
+            case 0b00:
+                mirrorValue = 0b01;
+                break;
+            case 0b01:
+                mirrorValue = 0b11;
+                break;
+            case 0b10:
+                mirrorValue = 0b00;
+                break;
+            case 0b11:
+                mirrorValue = 0b10;
+                break;
+            default:
+                mirrorValue = 0u;
+                break;
+        }
+
+        SetTileMirror(x, y, mirrorValue, layer);
+    }
+    
     public uint GetTileTexture(int x, int y, int layer = 0)
     {
         if (layer < 0 || layer >= LayerCount || x < 0 || x >= Width || y < 0 || y >= Height)

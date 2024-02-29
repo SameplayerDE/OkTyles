@@ -88,29 +88,63 @@ public class Game1 : Game
 
         EditorModeButtonText = new Binding<object>(EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode");
 
-        
-       
+        WorldMenu = new HStack(
+                new VStack(
+                    new Button(
+                            new Label()
+                            .SetTextBinding(EditorModeButtonText)
+                        )
+                        .OnClick(() =>
+                        {
+                            var temp = _camera.Copy();
+                            _camera = _prevCamera;
+                            _prevCamera = temp;
+                            EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
+                            EditorModeButtonText.Value =
+                                EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
+                            ShowToolButtons.Value = EditorMode == EditorMode.World;
+                        }),
+                    new HStack(
+                        new Button(
+                                new Label("Set")
+                            )
+                            .OnClick(() =>
+                            {
+                                EditMode = EditMode.Set;
+                            })
+                            .SetVisibilityBinding(ShowToolButtons)
+                    ),
+                    new Button(
+                            new Label("Remove")
+                        )
+                        .OnClick(() =>
+                        {
+                            EditMode = EditMode.Remove;
+                        })
+                        .SetVisibilityBinding(ShowToolButtons),
+                    new Button(
+                            new Label("Rotate")
+                        )
+                        .OnClick(() =>
+                        {
+                            EditMode = EditMode.Rotate;
+                        })
+                        .SetVisibilityBinding(ShowToolButtons),
+                    new Button(
+                            new Label("Copy")
+                        )
+                        .SetVisibilityBinding(ShowToolButtons)
+                )
+                .SetSpacing(10),
+                new Button(
+                        new Label("Save The Map")
+                    )
+                    .OnClick(() => { WorldLoader.WriteToFile(World, "Assets/output.json"); })
+                    .SetVisibilityBinding(ShowToolButtons)
+            )
+            .SetSpacing(10)
+            .SetPadding(10);
 
-        WorldMenu =   new HStack(
-               new Button(new Label()
-                       .SetTextBinding(EditorModeButtonText))
-                   .OnClick(() =>
-                   {
-                       var temp = _camera.Copy();
-                       _camera = _prevCamera;
-                       _prevCamera = temp;
-                       EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
-                       EditorModeButtonText.Value =
-                           EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
-                       ShowToolButtons.Value = EditorMode == EditorMode.World;
-                   }),
-               new Button(
-                       new Label("Save The Map")
-                   )
-                   .OnClick(() => { WorldLoader.WriteToFile(World, "Assets/output.json"); })
-                   .SetVisibilityBinding(ShowToolButtons)
-           )
-           .SetPadding(10);
          
 
         base.Initialize();
@@ -180,6 +214,15 @@ public class Game1 : Game
         }
 
         _camera.Update(gameTime, _delta);
+
+        if (EditMode == EditMode.Rotate && !ShowMirrorState)
+        {
+            ShowMirrorState = true;
+        }
+        else if (EditMode != EditMode.Rotate && ShowMirrorState)
+        {
+            ShowMirrorState = false;
+        }
         
         base.Update(gameTime);
     }
@@ -303,9 +346,30 @@ public class Game1 : Game
                         SelectedTileId = tileId;
                     }
                 }
-                else
+                else if (EditorMode == EditorMode.World)
                 {
-                    World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), SelectedTileId, ActiveLayer);
+                    if (EditMode == EditMode.Set)
+                    {
+                        World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), SelectedTileId, ActiveLayer);
+                    }
+                    else if (EditMode == EditMode.Remove)
+                    {
+                        World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), 0, ActiveLayer);
+                    }
+                }
+            }
+        }
+        
+        if (Context.Input.IsLeftMousePressed())
+        {
+            if (InBounds)
+            {
+                if (EditorMode == EditorMode.World)
+                {
+                    if (EditMode == EditMode.Rotate)
+                    {
+                        World.Rotate(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
+                    }
                 }
             }
         }
@@ -598,11 +662,14 @@ public class Game1 : Game
         {
             if (SelectedTileId != 0u)
             {
-                Rectangle tileSrc =
-                    GetSourceRectangle(SelectedTileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
-                spriteBatch.Draw(TileSet.Texture2D,
-                    (new Vector2(GetSelectedCellX(), GetSelectedCellY()) * World.TileSize).ToPoint().ToVector2(),
-                    tileSrc, Color.White * (float)Math.Abs(Math.Sin(gameTime.TotalGameTime.TotalSeconds)));
+                if (EditMode == EditMode.Set)
+                {
+                    Rectangle tileSrc =
+                        GetSourceRectangle(SelectedTileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                    spriteBatch.Draw(TileSet.Texture2D,
+                        (new Vector2(GetSelectedCellX(), GetSelectedCellY()) * World.TileSize).ToPoint().ToVector2(),
+                        tileSrc, Color.White * (float)Math.Abs(Math.Sin(gameTime.TotalGameTime.TotalSeconds)));
+                }
             }
 
             DrawSelection(GetSelectedCellX(), GetSelectedCellY(), Color.White * 0.5f);
