@@ -34,3 +34,9 @@
 /processorParam:TextureFormat=Compressed
 /build:faSolid.spritefont
 
+#begin maskEffect.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:maskEffect.fx
+

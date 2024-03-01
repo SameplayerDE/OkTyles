@@ -24,6 +24,8 @@ public class Game1 : Game
 
     private float _delta;
 
+    private RenderTarget2D _activeLayerTarget;
+    
     #region Editor
 
     public UserInterfaceNode WorldMenu;
@@ -75,6 +77,8 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        _activeLayerTarget = new RenderTarget2D(GraphicsDevice, 512, 512);
+        
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
 
@@ -214,7 +218,7 @@ public class Game1 : Game
         Context.Fonts["default"] = _font;
         Context.Fonts["fa-solid"] = Content.Load<SpriteFont>("faSolid");
         Context.Fonts["fa-regular"] = Content.Load<SpriteFont>("faRegular");
-
+        
         World = WorldLoader.ReadFromFile("Assets/output.json");
         TileSet = TileSet.ReadFromFile("Assets/tileSet.json");
 
@@ -282,16 +286,49 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+
+        DrawActiveLayerTarget(_spriteBatch, gameTime, _delta);
+
         GraphicsDevice.Clear(Theme.DarkerBrown);
 
         DrawWithMatrix(_spriteBatch, gameTime, _delta);
         DrawWithoutMatrix(_spriteBatch, gameTime, _delta);
-
-        _spriteBatch.Begin(SpriteSortMode.Texture);
-
+        
+        _spriteBatch.Begin(SpriteSortMode.Immediate);
+        //_spriteBatch.Draw(_activeLayerTarget, Vector2.Zero, Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private void DrawActiveLayerTarget(SpriteBatch spriteBatch, GameTime gameTime, float delta)
+    {
+        GraphicsDevice.SetRenderTarget(_activeLayerTarget);
+        GraphicsDevice.Clear(Color.Transparent);
+        _spriteBatch.Begin();
+        
+        if (EditorMode == EditorMode.World)
+        {
+            for (int y = 0; y < World.Height; y++)
+            {
+                for (int x = 0; x < World.Width; x++)
+                {
+                    uint tileId = World.GetTileTexture(x, y, ActiveLayer);
+                    if (tileId != 0u)
+                    {
+                        Rectangle tileSrc =
+                            GetSourceRectangle(tileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                        
+                        spriteBatch.Draw(TileSet.Texture2D, (new Vector2(x, y) * World.TileSize).ToPoint().ToVector2(),
+                            tileSrc, Color.White, 0f, Vector2.Zero, Vector2.One,
+                            (SpriteEffects)World.GetTileMirror(x, y, ActiveLayer), 0f);
+                    }
+                }
+            }
+        }
+        
+        _spriteBatch.End();
+        GraphicsDevice.SetRenderTarget(null);
     }
 
     private int GetSelectedCellX()
@@ -590,6 +627,7 @@ public class Game1 : Game
         if (EditorMode == EditorMode.World)
         {
             DrawWorldMode(spriteBatch, gameTime, delta);
+            spriteBatch.Draw(_activeLayerTarget, Vector2.Zero, Color.White);
         }
 
         if (EditorMode == EditorMode.Tiles)
