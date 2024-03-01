@@ -1,5 +1,7 @@
 # OkTyles
 
+[![Code Validation](https://github.com/SameplayerDE/OkTyles/actions/workflows/compile.yml/badge.svg)](https://github.com/SameplayerDE/OkTyles/actions/workflows/compile.yml)
+
 [Deutsch](README.de.md) | English
 
 OkTyles is a tile map editor where each cell within the map has its own rotation, collision, and image information. This allows for precise control over each cell and reduces the memory footprint to 32 bits per cell for a compact representation.

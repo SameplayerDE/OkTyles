@@ -1,5 +1,7 @@
 # OkTyles
 
+[![Code Validation](https://github.com/SameplayerDE/OkTyles/actions/workflows/compile.yml/badge.svg)](https://github.com/SameplayerDE/OkTyles/actions/workflows/compile.yml)
+
 Deutsch | [English](README.md)
 
 OkTyles ist ein Karten-Editor, bei dem jede Zelle innerhalb der Karte ihre eigene Rotation, Kollision und Bildinformationen hat. Dies ermöglicht eine präzise Kontrolle über jede Zelle und reduziert den Speicherbedarf auf 32 Bits pro Zelle für eine kompakte Darstellung.
