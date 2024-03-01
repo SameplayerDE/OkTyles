@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up .NET Core SDK (Linux)
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies (Linux)
+        run: dotnet restore
+
+      - name: Build for Linux
+        run: dotnet build --configuration Release --output ./bin/linux
+
+      - name: Set up MSYS2 (Linux)
+        uses: actions/setup-msys2@v1
+
+      - name: Install mingw-w64 toolchain (Linux)
+        run: pacman -S --noconfirm mingw-w64-x86_64-toolchain
+
+      - name: Build for Windows (Cross-Compile)
+        run: dotnet build --configuration Release --runtime win-x64 --output ./bin/windows
+
+      - name: Set up .NET Core SDK (Windows)
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
+        if: runner.os == 'windows'
+
+      - name: Restore dependencies (Windows)
+        run: dotnet restore
+        if: runner.os == 'windows'
+
+      - name: Build for Windows
+        run: dotnet build --configuration Release --output ./bin/windows
+        if: runner.os == 'windows'
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: builds
+          path: |
+            bin/linux
+            bin/windows
