@@ -42,16 +42,17 @@ jobs:
       - name: Build for Linux
         run: dotnet publish -c Release -r linux-x64 --output ./bin/Linux
   
-  package:
-    name: Package Builds
-    runs-on: ubuntu-latest
-    needs: [build_windows, build_linux]
-    steps:
-      - name: Create Output Directory
-        run: mkdir -p ./output
-
-      - name: Copy Windows build
-        run: cp -r ./bin/Windows ./output/Windows
-
-      - name: Copy Linux build
-        run: cp -r ./bin/Linux ./output/Linux
+  #package:
+  #  name: Package Builds
+  #  runs-on: ubuntu-latest
+  #  needs: [build_windows, build_linux]
+  #  steps:
+  #    - name: Create Output Directory
+  #      run: mkdir -p ./output
+#
+  #    - name: Copy Windows build
+  #      run: cp -r ./bin/Windows ./output/Windows
+#
+  #    - name: Copy Linux build
+  #      run: cp -r ./bin/Linux ./output/Linux
+#
