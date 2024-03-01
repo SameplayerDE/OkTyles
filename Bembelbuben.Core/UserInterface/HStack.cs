@@ -12,6 +12,9 @@ public class HStack : UserInterfaceNodeContainer
     public float PaddingRight { get; private set; }
     public float PaddingBottom { get; private set; }
     
+    public Color Tint = Color.Transparent;
+    public float Alpha = 1f;
+    
     public HStack(IEnumerable<UserInterfaceNode> nodes) : base(UserInterfaceNodeType.HStack)
     {
         Children.AddRange(nodes);
@@ -25,6 +28,18 @@ public class HStack : UserInterfaceNodeContainer
     public HStack SetAlignment(Alignment value)
     {
         Alignment = value;
+        return this;
+    }
+
+    public HStack SetTint(Color color)
+    {
+        Tint = color;
+        return this;
+    }
+    
+    public HStack SetAlpha(float value)
+    {
+        Alpha = value;
         return this;
     }
     

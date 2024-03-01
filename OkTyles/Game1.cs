@@ -7,8 +7,6 @@ using Bembelbuben.Core.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Windows.Markup;
-using System.Xml.Linq;
 using OkTyles.Core.Commands;
 
 namespace OkTyles;
@@ -56,6 +54,7 @@ public class Game1 : Game
     #region UserInterface
 
     public Binding<object> EditorModeButtonText;
+    public Binding<object> ActiveLayerBinding;
     public Binding<bool> ShowToolButtons = new(true);
 
     #endregion
@@ -90,6 +89,7 @@ public class Game1 : Game
         Context.ContentManager = Content;
 
         EditorModeButtonText = new Binding<object>(EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode");
+        ActiveLayerBinding = new Binding<object>(ActiveLayer);
 
         WorldMenu = new HStack(
                 new VStack(
@@ -136,7 +136,55 @@ public class Game1 : Game
                     new Button(
                             new Label("Copy")
                         )
-                        .SetVisibilityBinding(ShowToolButtons)
+                        .SetVisibilityBinding(ShowToolButtons),
+                    new VStack(
+                            new Label("Layer Settings")
+                                .SetVisibilityBinding(ShowToolButtons),
+                            new Button(
+                                    new Label("Add")
+                                )
+                                .SetVisibilityBinding(ShowToolButtons),
+                            new Button(
+                                    new Label("Remove")
+                                )
+                                .SetVisibilityBinding(ShowToolButtons),
+                            new HStack(
+                                new VStack(
+                                    new Button(
+                                            new Label("Up")
+                                        )
+                                        .OnClick(() =>
+                                        {
+                                            ActiveLayer = Math.Clamp(++ActiveLayer, 0, World.LayerCount - 1);
+                                            ActiveLayerBinding.Value = ActiveLayer;
+                                        })
+                                        .SetVisibilityBinding(ShowToolButtons),
+                                    new Button(
+                                            new Label("Down")
+                                        )
+                                        .OnClick(() =>
+                                        {
+                                            ActiveLayer = Math.Clamp(--ActiveLayer, 0, World.LayerCount - 1);
+                                            ActiveLayerBinding.Value = ActiveLayer;
+                                        })
+                                        .SetVisibilityBinding(ShowToolButtons)
+                                )
+                                .SetSpacing(5),
+                                new Label()
+                                    .SetTextBinding(ActiveLayerBinding)
+                            )
+                            .SetAlignment(Alignment.Center),
+                            new Button(
+                                    new Label("Toogle Render Mode")
+                                )
+                                .OnClick(() =>
+                                {
+                                    ShowAllLayers = !ShowAllLayers;
+                                })
+                                .SetVisibilityBinding(ShowToolButtons)
+                        )
+                        .SetSpacing(5)
+                        .SetPaddingTop(25)
                 )
                 .SetSpacing(10),
                 new Button(
@@ -163,7 +211,9 @@ public class Game1 : Game
         _uiRenderer.Images.Add("lists", EditorUtils.LoadTextureFromPath("Assets/Lists.png", Context.GraphicsDevice));
         _uiRenderer.Images.Add("search", EditorUtils.LoadTextureFromPath("Assets/Search.png", Context.GraphicsDevice));
 
-        Context.Font = _font;
+        Context.Fonts["default"] = _font;
+        Context.Fonts["fa-solid"] = Content.Load<SpriteFont>("faSolid");
+        Context.Fonts["fa-regular"] = Content.Load<SpriteFont>("faRegular");
 
         World = WorldLoader.ReadFromFile("Assets/output.json");
         TileSet = TileSet.ReadFromFile("Assets/tileSet.json");
@@ -360,7 +410,7 @@ public class Game1 : Game
                 else if (EditorMode == EditorMode.World && EditMode == EditMode.Set)
                 {
                     var oldTile = World.GetTileTexture(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
-                    if (oldTile != SelectedTileId)
+                    if (oldTile != SelectedTileId && SelectedTileId != 0u)
                     {
                         var command = new SetTileCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
                             oldTile, SelectedTileId);
@@ -659,7 +709,7 @@ public class Game1 : Game
                         }
                         else
                         {
-                            alpha = 0.5f;
+                            alpha = 0.2f;
                         }
 
                         if (ShowAllLayers)
@@ -671,6 +721,26 @@ public class Game1 : Game
                             tileSrc, Color.White * alpha, 0f, Vector2.Zero, Vector2.One,
                             (SpriteEffects)World.GetTileMirror(x, y, layer), 0f);
                     }
+                }
+            }
+
+            if (ActiveLayer == layer)
+            {
+                if (InBounds)
+                {
+                    if (SelectedTileId != 0u)
+                    {
+                        if (EditMode == EditMode.Set)
+                        {
+                            Rectangle tileSrc =
+                                GetSourceRectangle(SelectedTileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                            spriteBatch.Draw(TileSet.Texture2D,
+                                (new Vector2(GetSelectedCellX(), GetSelectedCellY()) * World.TileSize).ToPoint().ToVector2(),
+                                tileSrc, Color.White * (float)Math.Abs(Math.Sin(gameTime.TotalGameTime.TotalSeconds)));
+                        }
+                    }
+
+                    DrawSelection(GetSelectedCellX(), GetSelectedCellY(), Color.White * 1f);
                 }
             }
         }
@@ -689,7 +759,7 @@ public class Game1 : Game
                 }
             }
 
-            DrawSelection(GetSelectedCellX(), GetSelectedCellY(), Color.White * 0.5f);
+            //DrawSelection(GetSelectedCellX(), GetSelectedCellY(), Color.White * 0.5f);
         }
     }
 

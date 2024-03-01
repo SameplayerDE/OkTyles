@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+
 namespace Bembelbuben.Core.UserInterface;
 
 public class VStack : UserInterfaceNodeContainer
@@ -9,6 +11,9 @@ public class VStack : UserInterfaceNodeContainer
     public float PaddingTop { get; private set; }
     public float PaddingRight { get; private set; }
     public float PaddingBottom { get; private set; }
+    
+    public Color Tint = Color.Transparent;
+    public float Alpha = 1f;
     
     public VStack(params UserInterfaceNode[] nodes) : base(UserInterfaceNodeType.VStack)
     {
@@ -24,6 +29,18 @@ public class VStack : UserInterfaceNodeContainer
     public VStack SetAlignment(Alignment value)
     {
         Alignment = value;
+        return this;
+    }
+    
+    public VStack SetTint(Color color)
+    {
+        Tint = color;
+        return this;
+    }
+    
+    public VStack SetAlpha(float value)
+    {
+        Alpha = value;
         return this;
     }
     

@@ -203,7 +203,7 @@ public class UserInterfaceRenderer
             var label = (Label)node;
             var text = "";
             text = Convert.ToString(label.Text) ?? "";
-            var dimensions = Context.Font.MeasureString(text);
+            var dimensions = Context.Fonts[label.Font].MeasureString(text);
             label.Height = dimensions.Y;
             label.Width = dimensions.X;
         }
@@ -238,7 +238,7 @@ public class UserInterfaceRenderer
         if (node.Type == UserInterfaceNodeType.HStack)
         {
             var stack = (HStack)node;
-            //spriteBatch.Draw(ButtonTile, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), Color.White); // Anpassen der Zeichenroutine für die Gesamtbreite
+            //spriteBatch.Draw(Context.Pixel, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), stack.Tint * stack.Alpha); // Anpassen der Zeichenroutine für die Gesamtbreite
             foreach (var child in stack.Children)
             {
                 Draw(child, spriteBatch, gameTime, delta);
@@ -249,7 +249,7 @@ public class UserInterfaceRenderer
         if (node.Type == UserInterfaceNodeType.VStack)
         {
             var stack = (VStack)node;
-            //spriteBatch.Draw(Context.Pixel, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), Color.White);
+            //spriteBatch.Draw(Context.Pixel, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), stack.Tint * stack.Alpha); // Anpassen der Zeichenroutine für die Gesamtbreite
 
             foreach (var child in stack.Children)
             {
@@ -282,7 +282,7 @@ public class UserInterfaceRenderer
         if (node.Type == UserInterfaceNodeType.Label)
         {
             var label = (Label)node;
-            spriteBatch.DrawString(Context.Font, Convert.ToString(label.Text) ?? "", new Vector2(label.X, label.Y), Color.White);
+            spriteBatch.DrawString(Context.Fonts[label.Font], Convert.ToString(label.Text) ?? "", new Vector2(label.X, label.Y), Color.White);
         }
         
         if (node.Type == UserInterfaceNodeType.Image)
