@@ -25,6 +25,8 @@ public class Game1 : Game
     private float _delta;
 
     private RenderTarget2D _activeLayerTarget;
+    private RenderTarget2D _selectionTarget;
+    private Effect _maskEffect;
     
     #region Editor
 
@@ -78,7 +80,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _activeLayerTarget = new RenderTarget2D(GraphicsDevice, 512, 512);
-        
+        _selectionTarget = new RenderTarget2D(GraphicsDevice, 512, 512);
+
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
 
@@ -209,6 +212,10 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _font = Content.Load<SpriteFont>("default_font");
+        _maskEffect = Content.Load<Effect>("maskEffect");
+
+        _maskEffect.Parameters["LayerTexture"].SetValue(_activeLayerTarget);
+        _maskEffect.Parameters["SelectionTexture"].SetValue(_selectionTarget);
 
         _uiRenderer.ButtonTile = EditorUtils.LoadTextureFromPath("Assets/button_nt.png", Context.GraphicsDevice);
         _uiRenderer.Images.Add("microsoft", EditorUtils.LoadTextureFromPath("Assets/Microsoft.png", Context.GraphicsDevice));
@@ -233,8 +240,6 @@ public class Game1 : Game
 
         _prevCamera.X += TileSet.TilesPerRow * TileSet.TileWidth / 2f;
         _prevCamera.Y += TileSet.TilesPerColumn * TileSet.TileHeight / 2f;
-        
-        
         
     }
 
@@ -288,25 +293,33 @@ public class Game1 : Game
     {
 
         DrawActiveLayerTarget(_spriteBatch, gameTime, _delta);
+        DrawSelectionTarget(_spriteBatch, gameTime, _delta);
 
         GraphicsDevice.Clear(Theme.DarkerBrown);
 
         DrawWithMatrix(_spriteBatch, gameTime, _delta);
         DrawWithoutMatrix(_spriteBatch, gameTime, _delta);
         
-        _spriteBatch.Begin(SpriteSortMode.Immediate);
+        _spriteBatch.Begin();
         //_spriteBatch.Draw(_activeLayerTarget, Vector2.Zero, Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);
     }
 
+    private void DrawSelectionTarget(SpriteBatch spriteBatch, GameTime gameTime, float delta)
+    {
+        if (InBounds)
+        {
+            DrawSelection(GetSelectedCellX(), GetSelectedCellY(), Color.White);
+        }
+    }
+
     private void DrawActiveLayerTarget(SpriteBatch spriteBatch, GameTime gameTime, float delta)
     {
         GraphicsDevice.SetRenderTarget(_activeLayerTarget);
-        GraphicsDevice.Clear(Color.Transparent);
+        GraphicsDevice.Clear(Color.Blue);
         _spriteBatch.Begin();
-        
         if (EditorMode == EditorMode.World)
         {
             for (int y = 0; y < World.Height; y++)
