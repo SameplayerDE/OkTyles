@@ -1,59 +1,33 @@
-name: Build and Package
+name: Code Validation
 
 on:
   push:
     branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
       - master
 
 jobs:
-  build_windows:
-    name: Build on Windows
-    runs-on: windows-latest
+  build:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
+      - name: Restore Dependencies
         run: dotnet restore
 
-      - name: Build for Windows x64
-        run: dotnet publish -c Release -r win-x64 --output ./bin/Windows
+      - name: Build Solution
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Build for Linux x64
-        run: dotnet publish -c Release -r linux-x64 --output ./bin/Linux
-        
-      - name: Build for macOS x64
-        run: dotnet publish -c Release -r osx-x64 --output ./bin/macOSx64
-
-      - name: Build for macOS ARM64
-        run: dotnet publish -c Release -r osx-arm64 --output ./bin/macOSAcorn
-        
-      #- name: Upload artifacts
-      #  uses: actions/upload-artifact@v2
-      #  with:
-      #    name: build-artifacts
-      #    path: |
-      #      bin/Windows
-      #      bin/Linux
-      #      bin/macOSx64
-      #      bin/macOSAcorn
-        
-  #package:
-  #  name: Package Builds
-  #  runs-on: ubuntu-latest
-  #  needs: [build_windows, build_linux]
-  #  steps:
-  #    - name: Create Output Directory
-  #      run: mkdir -p ./output
-#
-  #    - name: Copy Windows build
-  #      run: cp -r ./bin/Windows ./output/Windows
-#
-  #    - name: Copy Linux build
-  #      run: cp -r ./bin/Linux ./output/Linux
-#
+      - name: Run Tests
+        run: dotnet test --configuration Release --no-build
