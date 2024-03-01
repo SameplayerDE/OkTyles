@@ -21,27 +21,17 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build for Windows
-        run: dotnet build --configuration Release --output ./bin/Windows
+      - name: Build for Windows x64
+        run: dotnet publish -c Release -r win-x64 --output ./bin/Windows
 
-  build_linux:
-    name: Build on Linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 8.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build for Linux
+      - name: Build for Linux x64
         run: dotnet publish -c Release -r linux-x64 --output ./bin/Linux
-  
+        
+      - name: Build for macOS x64
+        run: dotnet publish -c Release -r osx-x64 --output ./bin/macOSx64
+
+      - name: Build for macOS ARM64
+        run: dotnet publish -c Release -r osx-arm64 --output ./bin/macOSAcorn
   #package:
   #  name: Package Builds
   #  runs-on: ubuntu-latest
