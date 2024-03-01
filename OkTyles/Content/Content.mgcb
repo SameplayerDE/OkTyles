@@ -20,12 +20,6 @@
 /processorParam:TextureFormat=Compressed
 /build:default_font.spritefont
 
-#begin effect.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:effect.fx
-
 #begin faRegular.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
