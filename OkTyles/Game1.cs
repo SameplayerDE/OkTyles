@@ -475,7 +475,7 @@ public class Game1 : Game
                     var oldTile = World.GetTileTexture(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
                     if (oldTile != SelectedTileId && SelectedTileId != 0u)
                     {
-                        var command = new SetTileCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                        var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
                             oldTile, SelectedTileId);
                         CommandInvoker.ExecuteCommand(command);
                     }
@@ -484,7 +484,13 @@ public class Game1 : Game
                 {
                     if (EditMode == EditMode.Remove)
                     {
-                        World.SetTileTexture(GetSelectedCellX(), GetSelectedCellY(), 0, ActiveLayer);
+                        var oldTile = World.GetTileData(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
+                        if (oldTile != 0u)
+                        {
+                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                                oldTile, 0u);
+                            CommandInvoker.ExecuteCommand(command);
+                        }
                     }
                 }
             }
@@ -498,7 +504,15 @@ public class Game1 : Game
                 {
                     if (EditMode == EditMode.Rotate)
                     {
+                        var oldTile = World.GetTileData(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
                         World.Rotate(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
+                        var newTile = World.GetTileData(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
+                        if (oldTile != newTile)
+                        {
+                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                                oldTile, newTile);
+                            CommandInvoker.ExecuteCommand(command);
+                        }
                     }
                 }
             }

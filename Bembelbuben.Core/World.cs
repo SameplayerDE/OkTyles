@@ -41,7 +41,27 @@ public class World
             }
         }
     }
-        
+
+    public void SetTileData(int x, int y, int layer, uint value)
+    {
+        if (layer < 0 || layer >= LayerCount || x < 0 || x >= Width || y < 0 || y >= Height)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        Layers[layer][x, y] = value;
+    }
+    
+    public uint GetTileData(int x, int y, int layer)
+    {
+        if (layer < 0 || layer >= LayerCount || x < 0 || x >= Width || y < 0 || y >= Height)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        return Layers[layer][x, y];
+    }
+    
     public void SetTileTexture(int x, int y, uint value, int layer = 0)
     {
         if (layer < 0 || layer >= LayerCount || x < 0 || x >= Width || y < 0 || y >= Height)
