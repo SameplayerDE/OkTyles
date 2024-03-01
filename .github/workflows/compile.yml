@@ -1,56 +1,57 @@
-name: Build
+name: Build and Package
 
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  build_windows:
+    name: Build on Windows
+    runs-on: windows-latest
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up .NET Core SDK (Linux)
+      - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 5.0.x
 
-      - name: Restore dependencies (Linux)
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build for Windows
+        run: dotnet build --configuration Release --output ./bin/Windows
+
+  build_linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Restore dependencies
         run: dotnet restore
 
       - name: Build for Linux
-        run: dotnet build --configuration Release --output ./bin/linux
+        run: dotnet publish -c Release -r linux-x64 --output ./bin/Linux
+  
+  package:
+    name: Package Builds
+    runs-on: ubuntu-latest
+    needs: [build_windows, build_linux]
+    steps:
+      - name: Create Output Directory
+        run: mkdir -p ./output
 
-      - name: Set up MSYS2 (Linux)
-        uses: actions/setup-msys2@v1
+      - name: Copy Windows build
+        run: cp -r ./bin/Windows ./output/Windows
 
-      - name: Install mingw-w64 toolchain (Linux)
-        run: pacman -S --noconfirm mingw-w64-x86_64-toolchain
-
-      - name: Build for Windows (Cross-Compile)
-        run: dotnet build --configuration Release --runtime win-x64 --output ./bin/windows
-
-      - name: Set up .NET Core SDK (Windows)
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 8.0.x
-        if: runner.os == 'windows'
-
-      - name: Restore dependencies (Windows)
-        run: dotnet restore
-        if: runner.os == 'windows'
-
-      - name: Build for Windows
-        run: dotnet build --configuration Release --output ./bin/windows
-        if: runner.os == 'windows'
-
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: builds
-          path: |
-            bin/linux
-            bin/windows
+      - name: Copy Linux build
+        run: cp -r ./bin/Linux ./output/Linux
