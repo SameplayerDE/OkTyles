@@ -1,21 +1,26 @@
 # OkTyles
 
-[Deutsch](README.de.md) | English
-
-OkTyles is a tile map engine where each cell within the map has its own rotation, collision, and image information. This allows for precise control over each cell and reduces the memory footprint to 32 bits per cell for a compact representation.
+OkTyles is a tile map editor where each cell within the map has its own rotation, collision, and image information. This allows for precise control over each cell and reduces the memory footprint to 32 bits per cell for a compact representation.
 
 ## Features
 
 - Each cell contains rotation, collision, and display information.
 - Compact storage with only 32 bits per cell.
-- Edit the map directly within the engine.
 - Move freely between tiles for easy navigation.
 - Individual rotation per cell reduces the number of required tiles.
+- Layer management for organizing and controlling the depth of elements in the map.
+
+## Todo
+
+- Implement Lua scripting support.
+- Add support for custom map saving structure.
+- Introduce animated tiles functionality.
+- Implement tile rules for more dynamic map interactions.
 
 ## Screenshots
 
 ![Edit Map](Assets/image0.PNG)
-*Edit the map directly within the engine.*
+*Edit the map directly within the editor.*
 
 ![Free Movement](Assets/image1.PNG)
 *Move freely between cells.*
@@ -24,18 +29,21 @@ OkTyles is a tile map engine where each cell within the map has its own rotation
 
 1. Clone the repository: `git clone https://github.com/SameplayerDE/OkTyles.git`
 2. Open the project in your preferred development environment.
-3. Run the project and start using the tile map engine.
+3. Run the project and start using the tile map editor.
 
-## Usage
+## Shortcuts
 
-1. Create a new tile map or load an existing one.
-2. Edit cells individually to set rotation, collision, and image information.
-3. Move freely across the map to make changes or adjust the layout.
-4. Enjoy precise control over each cell and compact storage.
+- **Zoom**: `Mouse Scroll`
+- **Pan**: `Mouse Button Middle`
+- **Undo**: `Ctrl + Z`
+- **Toggle Mirror State**: `Ctrl + R` (Hold `Shift` to toggle show mirror state)
+- **Show All Layers**: `Ctrl + Right Shift`
+- **Switch Active Layer Up**: `Ctrl + Up`
+- **Switch Active Layer Down**: `Ctrl + Down`
 
 ## Contribution
 
-Feeling inspired? Want to improve or expand the tile map engine? Contributions are welcome! Simply open a pull request with your proposed changes.
+Feeling inspired? Want to improve or expand the tile map editor? Contributions are welcome! Simply open a pull request with your proposed changes.
 
 ## License
 

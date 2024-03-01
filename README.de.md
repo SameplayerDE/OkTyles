@@ -1,42 +1,50 @@
 # OkTyles
 
-Deutsch | [English](README.md)
+OkTyles ist ein Karten-Editor, bei dem jede Zelle innerhalb der Karte ihre eigene Rotation, Kollision und Bildinformationen hat. Dies ermöglicht eine präzise Kontrolle über jede Zelle und reduziert den Speicherbedarf auf 32 Bits pro Zelle für eine kompakte Darstellung.
 
-OkTyles ist eine Tile-Map-Engine, bei der jeder Zellen innerhalb der Karte seine eigene Rotation, Kollision und Bildinformationen hat. Dies ermöglicht eine präzise Steuerung der einzelnen Zellen und reduziert den Speicherbedarf auf 32 Bit pro Zelle für eine kompakte Darstellung.
+## Features
 
-## Funktionen
+- Jede Zelle enthält Rotation, Kollision und Anzeigeinformationen.
+- Kompakte Speicherung mit nur 32 Bits pro Zelle.
+- Bewegen Sie sich frei zwischen den Kacheln für einfache Navigation.
+- Individuelle Rotation pro Zelle reduziert die Anzahl der benötigten Kacheln.
+- Layer-Verwaltung zur Organisation und Steuerung der Tiefe von Elementen in der Karte.
 
-- Jede Zelle enthält Informationen zur Rotation, Kollision und Darstellung.
-- Kompakte Speicherung mit nur 32 Bit pro Zelle.
-- Bearbeitung der Karte direkt innerhalb der Engine.
-- Freie Bewegung zwischen den Zellen für eine einfache Navigation.
-- Individuelle Rotation pro Zelle reduziert die Anzahl der benötigten Tiles.
+## Todo
+
+- Implementierung von Lua-Skriptunterstützung.
+- Unterstützung für benutzerdefinierte Speicherstruktur der Karte hinzufügen.
+- Einführung der Funktionalität für animierte Kacheln.
+- Implementierung von Kachelregeln für dynamischere Karteninteraktionen.
 
 ## Screenshots
 
-![Bearbeiten der Karte](Assets/image0.PNG)
-*Bearbeite die Karte direkt in der Engine.*
+![Karte bearbeiten](Assets/image0.PNG)
+*Bearbeiten Sie die Karte direkt im Editor.*
 
 ![Freie Bewegung](Assets/image1.PNG)
-*Bewege dich frei zwischen den Zellen.*
+*Bewegen Sie sich frei zwischen den Zellen.*
 
 ## Installation
 
 1. Klone das Repository: `git clone https://github.com/SameplayerDE/OkTyles.git`
 2. Öffne das Projekt in deiner bevorzugten Entwicklungsumgebung.
-3. Führe das Projekt aus und beginne mit der Verwendung der Tile-Map-Engine.
+3. Führe das Projekt aus und beginne den Karten-Editor zu nutzen.
 
-## Verwendung
+## Tastenkürzel
 
-1. Erstelle eine neue Tile-Map oder lade eine vorhandene.
-2. Bearbeite die Zellen individuell, um Rotation, Kollision und Bildinformationen festzulegen.
-3. Bewege dich frei über die Karte, um Änderungen vorzunehmen oder das Layout anzupassen.
-4. Genieße die präzise Kontrolle über jede Zelle und die kompakte Speicherung.
+- **Zoomen**: `Maus Scrollen`
+- **Verschieben**: `Maus-Taste Mitte`
+- **Rückgängig machen**: `Strg + Z`
+- **Spiegelzustand umschalten**: `Strg + R` (Halte `Shift` gedrückt, um den Spiegelzustand anzuzeigen)
+- **Alle Layer anzeigen**: `Strg + Rechte Umschalttaste`
+- **Aktiven Layer nach oben wechseln**: `Strg + Hoch-Pfeil`
+- **Aktiven Layer nach unten wechseln**: `Strg + Runter-Pfeil`
 
 ## Beitrag
 
-Fühlst du dich inspiriert? Möchtest du die Tile-Map-Engine verbessern oder erweitern? Contributions sind herzlich willkommen! Öffne einfach einen Pull-Request mit deinen Änderungsvorschlägen.
+Fühlst du dich inspiriert? Möchtest du den Karten-Editor verbessern oder erweitern? Beiträge sind willkommen! Öffne einfach ein Pull-Request mit deinen vorgeschlagenen Änderungen.
 
 ## Lizenz
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen findest du in der [Lizenzdatei](https://github.com/SameplayerDE/OkTyles/blob/master/LICENSE).
+Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen findest du in der [LICENSE](https://github.com/SameplayerDE/OkTyles/blob/master/LICENSE)-Datei.

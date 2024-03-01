@@ -129,4 +129,43 @@ public class World
         var result = Layers[layer][x, y] & 0b00000000_00000011_00000000_00000000;
         return result >> 16;
     }
+    
+    public void AddLayer()
+    {
+        Array.Resize(ref Layers, LayerCount + 1);
+        Layers[LayerCount] = new uint[Width, Height];
+        InitializeLayer(Layers[LayerCount]);
+        LayerCount++;
+    }
+
+    public void RemoveLayer(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= LayerCount)
+        {
+            throw new IndexOutOfRangeException();
+        }
+    
+        // Shift layers down
+        for (int i = layerIndex; i < LayerCount - 1; i++)
+        {
+            Layers[i] = Layers[i + 1];
+        }
+
+        // Resize the array
+        Array.Resize(ref Layers, LayerCount - 1);
+        LayerCount--;
+    }
+    
+    public void SwapLayers(int layerIndex1, int layerIndex2)
+    {
+        if (layerIndex1 < 0 || layerIndex1 >= LayerCount || layerIndex2 < 0 || layerIndex2 >= LayerCount)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        var tempLayer = Layers[layerIndex1];
+        Layers[layerIndex1] = Layers[layerIndex2];
+        Layers[layerIndex2] = tempLayer;
+    }
+    
 }
