@@ -32,6 +32,17 @@ jobs:
 
       - name: Build for macOS ARM64
         run: dotnet publish -c Release -r osx-arm64 --output ./bin/macOSAcorn
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            bin/Windows
+            bin/Linux
+            bin/macOSx64
+            bin/macOSAcorn
+        
   #package:
   #  name: Package Builds
   #  runs-on: ubuntu-latest
