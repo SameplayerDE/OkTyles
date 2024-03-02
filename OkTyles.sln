@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OkTyles", "OkTyles\OkTyles.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bembelbuben.Core", "Bembelbuben.Core\Bembelbuben.Core.csproj", "{535ED2C8-BB25-4489-B461-C79C02015528}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureSandbox", "FeatureSandbox\FeatureSandbox.csproj", "{62362D35-FE67-4B18-9654-50F6546C3AE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{535ED2C8-BB25-4489-B461-C79C02015528}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{535ED2C8-BB25-4489-B461-C79C02015528}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{535ED2C8-BB25-4489-B461-C79C02015528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62362D35-FE67-4B18-9654-50F6546C3AE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62362D35-FE67-4B18-9654-50F6546C3AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62362D35-FE67-4B18-9654-50F6546C3AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62362D35-FE67-4B18-9654-50F6546C3AE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
