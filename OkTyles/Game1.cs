@@ -92,7 +92,8 @@ public class Game1 : Game
         ActiveLayerBinding = new Binding<object>(ActiveLayer);
         LayerCountBinding = new Binding<object>(0);
 
-        WorldMenu = new HStack(
+        WorldMenu = new ScrollView(
+            new HStack(
                 new VStack(
                     new Button(
                             new Label()
@@ -148,8 +149,7 @@ public class Game1 : Game
                                         )
                                         .OnClick(() =>
                                         {
-                                            World.AddLayer();
-                                            LayerCountBinding.Value = World.LayerCount;
+                                            World.AddLayer(++ActiveLayer);
                                         })
                                         .SetVisibilityBinding(ShowToolButtons),
                                     new Button(
@@ -157,8 +157,12 @@ public class Game1 : Game
                                         )
                                         .OnClick(() =>
                                         {
-                                            World.RemoveLayer(ActiveLayer);
-                                            LayerCountBinding.Value = World.LayerCount;
+                                            if (World.LayerCount > 1)
+                                            {
+                                                World.RemoveLayer(ActiveLayer);
+                                                ActiveLayer = Math.Max(ActiveLayer - 1, 0);
+                                                
+                                            }
                                         })
                                         .SetVisibilityBinding(ShowToolButtons)
                                     )
@@ -176,7 +180,7 @@ public class Game1 : Game
                                         .OnClick(() =>
                                         {
                                             ActiveLayer = Math.Clamp(++ActiveLayer, 0, World.LayerCount - 1);
-                                            ActiveLayerBinding.Value = ActiveLayer;
+                                            
                                         })
                                         .SetVisibilityBinding(ShowToolButtons),
                                     new Button(
@@ -185,7 +189,7 @@ public class Game1 : Game
                                         .OnClick(() =>
                                         {
                                             ActiveLayer = Math.Clamp(--ActiveLayer, 0, World.LayerCount - 1);
-                                            ActiveLayerBinding.Value = ActiveLayer;
+                                            
                                         })
                                         .SetVisibilityBinding(ShowToolButtons)
                                 )
@@ -210,7 +214,6 @@ public class Game1 : Game
                                                     {
                                                         (World.Layers[switchLayer], World.Layers[currentLayer]) = (World.Layers[currentLayer], World.Layers[switchLayer]);
                                                         ActiveLayer = switchLayer;
-                                                        ActiveLayerBinding.Value = ActiveLayer;
                                                     }
                                                 })
                                                 .SetVisibilityBinding(ShowToolButtons),
@@ -227,7 +230,6 @@ public class Game1 : Game
                                                     {
                                                         (World.Layers[switchLayer], World.Layers[currentLayer]) = (World.Layers[currentLayer], World.Layers[switchLayer]);
                                                         ActiveLayer = switchLayer;
-                                                        ActiveLayerBinding.Value = ActiveLayer;
                                                     }
                                                 })
                                                 .SetVisibilityBinding(ShowToolButtons)
@@ -255,7 +257,8 @@ public class Game1 : Game
                     .SetVisibilityBinding(ShowToolButtons)
             )
             .SetSpacing(10)
-            .SetPadding(10);
+            .SetPadding(10)
+            );
 
          
 
@@ -268,9 +271,9 @@ public class Game1 : Game
         _font = Content.Load<SpriteFont>("default_font");
 
         _uiRenderer.ButtonTile = EditorUtils.LoadTextureFromPath("Assets/button_nt.png", Context.GraphicsDevice);
-        _uiRenderer.Images.Add("microsoft", EditorUtils.LoadTextureFromPath("Assets/Microsoft.png", Context.GraphicsDevice));
-        _uiRenderer.Images.Add("lists", EditorUtils.LoadTextureFromPath("Assets/Lists.png", Context.GraphicsDevice));
-        _uiRenderer.Images.Add("search", EditorUtils.LoadTextureFromPath("Assets/Search.png", Context.GraphicsDevice));
+        _uiRenderer.AddImage("microsoft", EditorUtils.LoadTextureFromPath("Assets/Microsoft.png", Context.GraphicsDevice));
+        _uiRenderer.AddImage("lists", EditorUtils.LoadTextureFromPath("Assets/Lists.png", Context.GraphicsDevice));
+        _uiRenderer.AddImage("search", EditorUtils.LoadTextureFromPath("Assets/Search.png", Context.GraphicsDevice));
 
         Context.Fonts["default"] = _font;
         Context.Fonts["fa-solid"] = Content.Load<SpriteFont>("faSolid");
@@ -313,7 +316,7 @@ public class Game1 : Game
             Console.WriteLine(Context.Input.GetMousePosition());
         }
         
-        _uiRenderer.Calculate(WorldMenu);
+        _uiRenderer.CalculateLayout(WorldMenu);
 
         if (Context.Input.GetMousePosition().Y > 0 && GraphicsDevice.Viewport.Bounds.Contains(Context.Input.GetMousePosition()))
         {
@@ -339,6 +342,9 @@ public class Game1 : Game
         {
             ShowMirrorState = false;
         }
+        
+        ActiveLayerBinding.Value = ActiveLayer + 1;
+        LayerCountBinding.Value = World.LayerCount;
         
         base.Update(gameTime);
     }

@@ -8,6 +8,7 @@ public class Binding<T>
         get => _value;
         set
         {
+            if (Equals(_value, value)) return;
             _value = value;
             ValueChanged?.Invoke(value);
         }

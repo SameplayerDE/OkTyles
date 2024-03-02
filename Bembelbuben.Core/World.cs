@@ -1,7 +1,13 @@
 namespace Bembelbuben.Core;
 
+/// <summary>
+/// Represents a world in the game.
+/// </summary>
 public class World
 {
+    /// <summary>
+    /// Enumeration for different collision mask types.
+    /// </summary>
     public enum CollisionMask : byte
     {
         None = 0,
@@ -9,20 +15,45 @@ public class World
         Circle = 2,
     }
 
+    /// <summary>
+    /// Gets the size of each tile in the world.
+    /// </summary>
     public int TileSize { get; private set; }
+
+    /// <summary>
+    /// Gets the width of the world in tiles.
+    /// </summary>
     public int Width { get; private set; }
+
+    /// <summary>
+    /// Gets the height of the world in tiles.
+    /// </summary>
     public int Height { get; private set; }
+
+    /// <summary>
+    /// Gets the number of layers in the world.
+    /// </summary>
     public int LayerCount { get; private set; }
-        
+
+    /// <summary>
+    /// Array to store tile data for each layer.
+    /// </summary>
     public uint[][,] Layers;
-        
+
+    /// <summary>
+    /// Constructor for creating a new world.
+    /// </summary>
+    /// <param name="width">Width of the world in tiles.</param>
+    /// <param name="height">Height of the world in tiles.</param>
+    /// <param name="tileSize">Size of each tile in pixels.</param>
+    /// <param name="layerCount">Number of layers in the world (default is 1).</param>
     public World(int width, int height, int tileSize, int layerCount = 1)
     {
         TileSize = tileSize;
         Width = width;
         Height = height;
         LayerCount = layerCount;
-            
+
         Layers = new uint[layerCount][,];
         for (int i = 0; i < layerCount; i++)
         {
@@ -150,12 +181,30 @@ public class World
         return result >> 16;
     }
     
-    public void AddLayer()
+    /// <summary>
+    /// Method to add a new layer to the world.
+    /// </summary>
+    /// <param name="insertAtIndex">Optional index at which to insert the new layer.</param>
+    public void AddLayer(int? insertAtIndex = null)
     {
-        Array.Resize(ref Layers, LayerCount + 1);
-        Layers[LayerCount] = new uint[Width, Height];
-        InitializeLayer(Layers[LayerCount]);
-        LayerCount++;
+        if (insertAtIndex == null || insertAtIndex >= LayerCount)
+        {
+            Array.Resize(ref Layers, LayerCount + 1);
+            Layers[LayerCount] = new uint[Width, Height];
+            InitializeLayer(Layers[LayerCount]);
+            LayerCount++;
+        }
+        else
+        {
+            Array.Resize(ref Layers, LayerCount + 1);
+            for (int i = LayerCount; i > insertAtIndex; i--)
+            {
+                Layers[i] = Layers[i - 1];
+            }
+            Layers[insertAtIndex.Value] = new uint[Width, Height];
+            InitializeLayer(Layers[insertAtIndex.Value]);
+            LayerCount++;
+        }
     }
 
     public void RemoveLayer(int layerIndex)

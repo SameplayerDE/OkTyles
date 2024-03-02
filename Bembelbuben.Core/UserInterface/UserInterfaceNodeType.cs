@@ -5,6 +5,7 @@ public enum UserInterfaceNodeType
     VStack,
     HStack,
     ZStack,
+    ScrollView,
     Spacer,
     Label,
     Button,
