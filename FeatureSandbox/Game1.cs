@@ -57,25 +57,29 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        _texture.Add(Content.Load<Texture2D>("layer0"));
-        _texture.Add(Content.Load<Texture2D>("layer1"));
+        _texture.Add(Content.Load<Texture2D>("Layer_0"));
+        _texture.Add(Content.Load<Texture2D>("Layer_1"));
+        _texture.Add(Content.Load<Texture2D>("Layer_2"));
 
         // Setup basic effect
         _basicEffect = new BasicEffect(GraphicsDevice);
         _basicEffect.TextureEnabled = true;
 
+        float aspectRatio = (float)_texture[0].Width / _texture[0].Height;
+
         // Create vertices for a quad
         _vertices = new VertexPositionTexture[]
         {
-            new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0)),
-            new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0)),
-            new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)),
-            new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1)),
+            new VertexPositionTexture(new Vector3(-aspectRatio, 1, 0), new Vector2(0, 0)),
+            new VertexPositionTexture(new Vector3(aspectRatio, 1, 0), new Vector2(1, 0)),
+            new VertexPositionTexture(new Vector3(-aspectRatio, -1, 0), new Vector2(0, 1)),
+            new VertexPositionTexture(new Vector3(aspectRatio, -1, 0), new Vector2(1, 1)),
         };
 
         // Create indices
         _indices = new short[] { 0, 1, 2, 1, 3, 2 };
     }
+
 
     protected override void Update(GameTime gameTime)
     {
@@ -104,10 +108,10 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
         _basicEffect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45),
             GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f);
-
-
+        
         GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
+        GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+        
         _basicEffect.View = _viewMatrix;
         _basicEffect.World = _worldMatrix;
 
