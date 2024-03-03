@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using OkTyles.Core;
 using Bembelbuben.Core;
 using Bembelbuben.Core.Input;
@@ -254,6 +255,14 @@ public class Game1 : Game
                         new Label("Save The Map")
                     )
                     .OnClick(() => { WorldLoader.WriteToFile(World, "Assets/output.json"); })
+                    .SetVisibilityBinding(ShowToolButtons),
+                new Button(
+                        new Label("Export Each Laye As Image")
+                    )
+                    .OnClick(() =>
+                    {
+                        SaveLayersAsTextures();
+                    })
                     .SetVisibilityBinding(ShowToolButtons)
             )
             .SetSpacing(10)
@@ -363,6 +372,87 @@ public class Game1 : Game
         base.Draw(gameTime);
     }
 
+    private void SaveLayersAsTextures()
+    {
+        // Erstelle ein Verzeichnis zum Speichern der Texturen, falls es nicht existiert
+        string directoryPath = "LayerTextures";
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        // Iteriere über alle Layer und speichere sie als separate Texturen
+        for (int layerIndex = 0; layerIndex < World.LayerCount; layerIndex++)
+        {
+            // Überprüfe, ob der Layer Daten enthält
+            bool hasData = CheckLayerForData(layerIndex);
+            if (!hasData)
+            {
+                continue; // Springe zum nächsten Layer, wenn dieser keine Daten enthält
+            }
+            
+            // Erstelle eine Render-Target-Texture für den aktuellen Layer
+            RenderTarget2D layerTexture = new RenderTarget2D(GraphicsDevice, World.Width * World.TileSize, World.Height * World.TileSize);
+
+            // Setze das Renderziel auf die aktuelle Layer-Texture
+            GraphicsDevice.SetRenderTarget(layerTexture);
+            GraphicsDevice.Clear(Color.Transparent); // Setze die Hintergrundfarbe auf Transparent
+
+            // Beginne das Zeichnen auf die aktuelle Layer-Texture
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            // Zeichne den aktuellen Layer auf die Layer-Texture
+            DrawWorldLayer(layerIndex);
+
+            // Beende das Zeichnen auf die Layer-Texture
+            _spriteBatch.End();
+
+            // Setze das Renderziel zurück auf den Standardbildschirm
+            GraphicsDevice.SetRenderTarget(null);
+
+            // Speichere die Layer-Texture in einer Datei
+            string filePath = Path.Combine(directoryPath, $"Layer_{layerIndex}.png");
+            using (FileStream stream = new FileStream(filePath, FileMode.Create))
+            {
+                layerTexture.SaveAsPng(stream, layerTexture.Width, layerTexture.Height);
+            }
+        }
+    }
+    
+    private bool CheckLayerForData(int layerIndex)
+    {
+        for (int y = 0; y < World.Height; y++)
+        {
+            for (int x = 0; x < World.Width; x++)
+            {
+                uint tileId = World.GetTileTexture(x, y, layerIndex);
+                if (tileId != 0u)
+                {
+                    return true; // Der Layer enthält mindestens ein Kachel-Datum
+                }
+            }
+        }
+        return false; // Der Layer enthält keine Kachel-Daten
+    }
+
+    private void DrawWorldLayer(int layerIndex)
+    {
+        for (int y = 0; y < World.Height; y++)
+        {
+            for (int x = 0; x < World.Width; x++)
+            {
+                uint tileId = World.GetTileTexture(x, y, layerIndex);
+                if (tileId != 0u)
+                {
+                    Rectangle tileSrc = GetSourceRectangle(tileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                    _spriteBatch.Draw(TileSet.Texture2D, (new Vector2(x, y) * World.TileSize).ToPoint().ToVector2(),
+                        tileSrc, Color.White, 0f, Vector2.Zero, Vector2.One,
+                        (SpriteEffects)World.GetTileMirror(x, y, layerIndex), 0f);
+                }
+            }
+        }
+    }
+    
     private int GetSelectedCellX()
     {
         Vector2 mousePosition = Context.Input.GetMousePosition().ToVector2();
@@ -530,6 +620,10 @@ public class Game1 : Game
             if (Context.Input.IsKeyPressed(Keys.S))
             {
                 WorldLoader.WriteToFile(World, "Assets/output.json");
+            }
+            if (Context.Input.IsKeyPressed(Keys.F1))
+            {
+                SaveLayersAsTextures();
             }
         }
         else if (EditorMode == EditorMode.Tiles)

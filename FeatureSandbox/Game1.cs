@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -9,11 +10,12 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private Texture2D _pixel;
-    
+    private List<Texture2D> _texture = new();
+
     private Vector3 _cameraPosition = new Vector3(0, 0, 5f);
     private Vector3 _cameraTarget = Vector3.Zero;
     private Vector3 _cameraUpVector = Vector3.UnitY;
-    
+
     private Matrix _viewMatrix;
     private Matrix _projectionMatrix;
     private Matrix _worldMatrix;
@@ -24,7 +26,7 @@ public class Game1 : Game
 
     private float _offset = 0.1f; // Initialer Offset-Wert
     private float _targetOffset = 0.1f; // Ziel-Offset-Wert
-    
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -36,25 +38,28 @@ public class Game1 : Game
     {
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
-        
+
 
         // Create the projection matrix
         float aspectRatio = GraphicsDevice.Viewport.AspectRatio;
         float fieldOfView = MathHelper.ToRadians(45);
         float nearClipPlane = 0.1f;
-        float farClipPlane = 100f;
+        float farClipPlane = 1000f;
         _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
 
         // Initialize world matrix
         _worldMatrix = Matrix.Identity;
-        
+
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        
+
+        _texture.Add(Content.Load<Texture2D>("layer0"));
+        _texture.Add(Content.Load<Texture2D>("layer1"));
+
         // Setup basic effect
         _basicEffect = new BasicEffect(GraphicsDevice);
         _basicEffect.TextureEnabled = true;
@@ -76,38 +81,41 @@ public class Game1 : Game
     {
         if (Keyboard.GetState().IsKeyDown(Keys.Enter))
         {
-            _cameraPosition.X = MathHelper.Lerp(_cameraPosition.X, -5f, 0.1f);
-            _targetOffset = 0.2f;
+            _cameraPosition.X = MathHelper.Lerp(_cameraPosition.X, -2.5f, 0.1f);
+            _cameraPosition.Z = MathHelper.Lerp(_cameraPosition.Z, 5f, 0.1f);
+            _targetOffset = 0.5f;
         }
         else
         {
             _cameraPosition.X = MathHelper.Lerp(_cameraPosition.X, 0f, 0.1f);
-            _targetOffset = 0.1f;
+            _cameraPosition.Z = MathHelper.Lerp(_cameraPosition.Z, 5f, 0.1f);
+            _targetOffset = 0.001f;
         }
-        
+
         _offset = MathHelper.Lerp(_offset, _targetOffset, 0.1f);
         _viewMatrix = Matrix.CreateLookAt(_cameraPosition, _cameraTarget, _cameraUpVector);
 
-        
+
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-_basicEffect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45),
-                GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f);
-        
+        _basicEffect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45),
+            GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f);
+
+
+        GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
         _basicEffect.View = _viewMatrix;
         _basicEffect.World = _worldMatrix;
-        _basicEffect.Texture = _pixel;
 
         // Zeichne das Quad viermal mit unterschiedlichen Z-Positionen
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < _texture.Count; i++)
         {
             _basicEffect.World = Matrix.CreateTranslation(0, 0, i * _offset);
-            _basicEffect.Texture = _pixel;
+            _basicEffect.Texture = _texture[i];
 
             foreach (var pass in _basicEffect.CurrentTechnique.Passes)
             {
