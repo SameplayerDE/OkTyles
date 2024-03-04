@@ -9,5 +9,6 @@ public enum UserInterfaceNodeType
     Spacer,
     Label,
     Button,
-    Image
+    Image,
+    TextField
 }

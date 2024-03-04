@@ -107,7 +107,7 @@ public class UserInterfaceRenderer
 
             // Setze die Position des Kindes auf die aktuelle Y-Position des Buttons
             child.X = currentX;
-            child.Y = currentY;
+            child.Y = currentY + node.Value;
 
             // Rendere das Kind und aktualisiere die Abmessungen des Buttons
             CalculateLayout(child);
@@ -330,10 +330,14 @@ public class UserInterfaceRenderer
         {
             var view = (ScrollView)node;
             //spriteBatch.Draw(Context.Pixel, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), stack.Tint * stack.Alpha); // Anpassen der Zeichenroutine für die Gesamtbreite
+            var prevRect = Context.GraphicsDevice.ScissorRectangle;
+            var scrollViewArea = new Rectangle((int)view.X, (int)view.Y - view.Value, (int)view.Width, (int)view.Height);
+            Context.GraphicsDevice.ScissorRectangle = scrollViewArea;
             foreach (var child in view.Children)
             {
                 Draw(child, spriteBatch, gameTime, delta);
             }
+            //Context.GraphicsDevice.ScissorRectangle = prevRect;
         }
         
         if (node.Type == UserInterfaceNodeType.Button)
@@ -373,6 +377,19 @@ public class UserInterfaceRenderer
         {
             return;
         }
+        
+        if (node.Type == UserInterfaceNodeType.ScrollView)
+        {
+            var scrollView = (ScrollView)node;
+            var scrollViewArea = new Rectangle((int)scrollView.X, (int)scrollView.Y - scrollView.Value, (int)scrollView.Width, (int)scrollView.Height);
+
+            if (scrollViewArea.Contains(Context.Input.GetMousePosition()))
+            {
+                var delta = Math.Clamp(Context.Input.GetMouseWheelValueDelta(), -1, 1);
+                scrollView.Value += delta;
+            }
+        }
+        
         if (node.Type == UserInterfaceNodeType.Button)
         {
             var button = (Button)node;
