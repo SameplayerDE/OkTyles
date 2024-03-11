@@ -13,6 +13,10 @@ public class World
         None = 0,
         Rectangle = 1,
         Circle = 2,
+        SlopeTL = 3,
+        SlopeTR = 4,
+        SlopeBL = 5,
+        SlopeBR = 6
     }
 
     /// <summary>

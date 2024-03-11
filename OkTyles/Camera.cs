@@ -41,7 +41,7 @@ public class Camera
     private void UpdateTransformationMatrix()
     {
         var viewportCenter = GraphicsDevice.Viewport.Bounds.Center.ToVector2() * 1;
-        var translation = viewportCenter - new Vector2(X, Y);
+        var translation = viewportCenter / Zoom - new Vector2(X, Y);
         
         TransformationMatrix = Matrix.CreateTranslation(new Vector3(translation, 0));
         TransformationMatrix *= Matrix.CreateScale(Zoom);

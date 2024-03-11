@@ -84,6 +84,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         PrimitiveRenderer.Initialise(GraphicsDevice);
+
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
 
@@ -182,30 +183,41 @@ public class Game1 : Game
                             })
                             .SetVisibilityBinding(ShowToolButtons),
                         new VStack(
-                                new Label("Shapes"),
-                                new Button(
-                                    new Label("Full")
+                            new VStack(
+                                    new Label("Shapes"),
+                                    new Button(
+                                            new Label("None")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.None; }),
+                                    new Button(
+                                            new Label("Full")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Rectangle; }),
+                                    new Button(
+                                            new Label("Circle")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Circle; }),
+                                    new Button(
+                                            new Label("Slope Top Left")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTL; }),
+                                    new Button(
+                                            new Label("Slope Top Right")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTR; }),
+                                    new Button(
+                                            new Label("Slope Bottom Left")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBL; }),
+                                    new Button(
+                                            new Label("Slope Bottom Right")
+                                        )
+                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBR; })
                                 )
-                                .OnClick(() =>
-                                {
-                                    CollisionMaskBrush = World.CollisionMask.Rectangle;
-                                }),
-                                new Button(
-                                    new Label("Circle")
-                                )
-                                .OnClick(() =>
-                                {
-                                    CollisionMaskBrush = World.CollisionMask.Circle;
-                                }),
-                                new Button(
-                                    new Label("Slope Top Left")
-                                ),
-                                new Button(
-                                    new Label("Slope Top Right")
-                                )
-                            )
-                            .SetSpacing(5)
-                            .SetVisibilityBinding(ShowCollisionRules),
+                                .SetSpacing(5)
+                                .SetVisibilityBinding(ShowCollisionRules)
+                        )
+                        .SetVisibilityBinding(ShowToolButtons),
                         new VStack(
                                 new Label("Layer Settings")
                                     .SetVisibilityBinding(ShowToolButtons),
@@ -355,7 +367,7 @@ public class Game1 : Game
         Context.Fonts["fa-regular"] = Content.Load<SpriteFont>("faRegular");
 
         LayerCountBinding.Value = World.LayerCount;
-        
+
         _camera.X += World.Width * World.TileSize / 2f;
         _camera.Y += World.Height * World.TileSize / 2f;
 
@@ -405,7 +417,7 @@ public class Game1 : Game
         {
             ShowMirrorState = false;
         }
-        
+
         if (EditMode == EditMode.Collision && !ShowCollisionRules.Value)
         {
             ShowCollisionRules.Value = true;
@@ -424,11 +436,11 @@ public class Game1 : Game
         Console.WriteLine(_camera.X);
         Console.WriteLine(_camera.Y);
         Console.WriteLine("-----");
-        
-        //PrimitiveRenderer.Scale = 1 / _camera.Zoom;
-        //PrimitiveRenderer.ViewOffset = new Vector3(_camera.X, _camera.Y, 0);
-        //PrimitiveRenderer.UpdateDefaultCamera();
-        
+
+        PrimitiveRenderer.Scale = 1 / _camera.Zoom;
+        PrimitiveRenderer.ViewOffset = new Vector3(_camera.X, _camera.Y, 0);
+        PrimitiveRenderer.UpdateDefaultCamera();
+
         base.Update(gameTime);
     }
 
@@ -438,28 +450,53 @@ public class Game1 : Game
 
         DrawWithMatrix(_spriteBatch, gameTime, _delta);
 
-        //if (EditMode == EditMode.Collision)
-        //{
-        //    for (int y = 0; y < World.Height; y++)
-        //    {
-        //        for (int x = 0; x < World.Width; x++)
-        //        {
-        //            World.CollisionMask collisionMask = World.GetTileCollision(x, y, ActiveLayer);
-        //            if (collisionMask != 0u)
-        //            {
-        //                PrimitiveRenderer.DrawRectF(
-        //                    null,
-        //                    Color.White, 
-        //                    new Rectangle(x, y, World.TileSize, World.TileSize)
-        //                );
-        //            }
-        //        }
-        //    }
-        //}
-        
+        if (EditMode == EditMode.Collision && EditorMode == EditorMode.World)
+        {
+            for (int y = 0; y < World.Height; y++)
+            {
+                for (int x = 0; x < World.Width; x++)
+                {
+                    World.CollisionMask collisionMask = World.GetTileCollision(x, y, ActiveLayer);
+                    if (collisionMask != 0u)
+                    {
+                        if (collisionMask == World.CollisionMask.Rectangle)
+                        {
+                            PrimitiveRenderer.DrawRectF(
+                                null,
+                                Color.Red * 0.5f,
+                                new Rectangle(x * World.TileSize, y * World.TileSize, World.TileSize, World.TileSize)
+                            );
+                        }
+
+                        if (collisionMask == World.CollisionMask.Circle)
+                        {
+                            PrimitiveRenderer.DrawCircleF(
+                                null,
+                                Color.Red * 0.5f,
+                                new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
+                                World.TileSize / 2,
+                                2
+                            );
+                        }
+
+                        if (collisionMask == World.CollisionMask.SlopeTL)
+                        {
+                            PrimitiveRenderer.DrawTriangleF(
+                                null,
+                                Color.Red * 0.5f,
+                                new Vector2(x * World.TileSize, y * World.TileSize),
+                                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                                new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         DrawWithoutMatrix(_spriteBatch, gameTime, _delta);
 
-        
+
         base.Draw(gameTime);
     }
 
@@ -621,6 +658,8 @@ public class Game1 : Game
             var diff = oldWorldMousePos - newWorldMousePos;
             _camera.X += diff.X;
             _camera.Y += diff.Y;
+            _camera.X = (float)Math.Round(_camera.X);
+            _camera.Y = (float)Math.Round(_camera.Y);
         }
         else if (Context.Input.GetMouseWheelValueDelta() < 0)
         {
@@ -631,6 +670,9 @@ public class Game1 : Game
             var diff = oldWorldMousePos - newWorldMousePos;
             _camera.X += diff.X;
             _camera.Y += diff.Y;
+
+            _camera.X = (float)Math.Round(_camera.X);
+            _camera.Y = (float)Math.Round(_camera.Y);
         }
 
         if (Context.Input.IsMiddleMouseDown())
@@ -683,6 +725,11 @@ public class Game1 : Game
                                 oldTile, 0u);
                             CommandInvoker.ExecuteCommand(command);
                         }
+                    }
+
+                    if (EditMode == EditMode.Collision)
+                    {
+                        World.SetTileCollision(GetSelectedCellX(), GetSelectedCellY(), CollisionMaskBrush, ActiveLayer);
                     }
                 }
             }
