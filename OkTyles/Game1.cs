@@ -355,15 +355,9 @@ public class Game1 : Game
         Context.Fonts["fa-regular"] = Content.Load<SpriteFont>("faRegular");
 
         LayerCountBinding.Value = World.LayerCount;
-
-        //_camera.X = -Context.GraphicsDevice.Viewport.Bounds.Center.X;
-        //_camera.Y = -Context.GraphicsDevice.Viewport.Bounds.Center.Y;
-        //
+        
         _camera.X += World.Width * World.TileSize / 2f;
         _camera.Y += World.Height * World.TileSize / 2f;
-
-        _prevCamera.X = -Context.GraphicsDevice.Viewport.Bounds.Center.X;
-        _prevCamera.Y = -Context.GraphicsDevice.Viewport.Bounds.Center.Y;
 
         _prevCamera.X += TileSet.TilesPerRow * TileSet.TileWidth / 2f;
         _prevCamera.Y += TileSet.TilesPerColumn * TileSet.TileHeight / 2f;

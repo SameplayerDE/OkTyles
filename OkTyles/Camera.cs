@@ -40,11 +40,11 @@ public class Camera
     
     private void UpdateTransformationMatrix()
     {
-        var viewportCenter = GraphicsDevice.Viewport.Bounds.Center.ToVector2();
+        var viewportCenter = GraphicsDevice.Viewport.Bounds.Center.ToVector2() * 1;
         var translation = viewportCenter - new Vector2(X, Y);
-
-        TransformationMatrix = Matrix.CreateScale(Zoom);
-        TransformationMatrix *= Matrix.CreateTranslation(new Vector3(translation, 0));
+        
+        TransformationMatrix = Matrix.CreateTranslation(new Vector3(translation, 0));
+        TransformationMatrix *= Matrix.CreateScale(Zoom);
     }
     
     public void Update(GameTime gameTime, float delta)
