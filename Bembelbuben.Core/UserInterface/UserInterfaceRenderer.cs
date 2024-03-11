@@ -6,7 +6,6 @@ namespace Bembelbuben.Core.UserInterface;
 
 public class UserInterfaceRenderer
 {
-
     // Fields
     private Dictionary<string, Texture2D> _images;
 
@@ -54,7 +53,7 @@ public class UserInterfaceRenderer
             return null;
         }
     }
-        
+
     /// <summary>
     /// Calculate the layout for the UI node.
     /// </summary>
@@ -111,7 +110,7 @@ public class UserInterfaceRenderer
 
             // Rendere das Kind und aktualisiere die Abmessungen des Buttons
             CalculateLayout(child);
-                
+
             totalHeight += child.Height;
             totalWidth += child.Width;
         }
@@ -163,7 +162,7 @@ public class UserInterfaceRenderer
 
             // Rendere das Kind und aktualisiere die Abmessungen des Buttons
             CalculateLayout(child);
-                
+
             totalHeight += child.Height;
             totalWidth += child.Width;
         }
@@ -183,12 +182,12 @@ public class UserInterfaceRenderer
         for (var index = 0; index < stack.Children.Count; index++)
         {
             var child = stack.Children[index];
-                
+
             if (!child.IsVisible)
             {
                 continue;
             }
-                
+
             child.X = currentX;
             child.Y = currentY;
 
@@ -200,7 +199,7 @@ public class UserInterfaceRenderer
             {
                 totalHeight += stack.Spacing;
             }
-                
+
             if (child.Width > maxWidth)
             {
                 maxWidth = child.Width;
@@ -209,7 +208,7 @@ public class UserInterfaceRenderer
 
         stack.Width = maxWidth + stack.PaddingLeft + stack.PaddingRight;
         stack.Height = totalHeight;
-            
+
         for (var index = 0; index < stack.Children.Count; index++)
         {
             var child = stack.Children[index];
@@ -222,10 +221,9 @@ public class UserInterfaceRenderer
                     CalculateLayout(child);
                 }
             }
-                
         }
     }
-    
+
     private void CalculateHStackLayout(HStack stack)
     {
         var currentY = stack.Y + stack.PaddingTop;
@@ -236,12 +234,12 @@ public class UserInterfaceRenderer
         for (var index = 0; index < stack.Children.Count; index++)
         {
             var child = stack.Children[index];
-            
+
             if (!child.IsVisible)
             {
                 continue;
             }
-            
+
             child.X = currentX;
             child.Y = currentY;
 
@@ -262,7 +260,7 @@ public class UserInterfaceRenderer
 
         stack.Height = maxHeight + stack.PaddingTop + stack.PaddingBottom;
         stack.Width = totalWidth;
-        
+
         for (var index = 0; index < stack.Children.Count; index++)
         {
             var child = stack.Children[index];
@@ -272,27 +270,26 @@ public class UserInterfaceRenderer
                 if (child.Height < maxHeight)
                 {
                     child.Y = stack.Y;
-                    child.Y +=  stack.Height / 2;
-                    child.Y -=  child.Height / 2;
+                    child.Y += stack.Height / 2;
+                    child.Y -= child.Height / 2;
                     CalculateLayout(child);
                 }
             }
-            
         }
     }
-    
+
     public void Draw(UserInterfaceNode node, SpriteBatch spriteBatch, GameTime gameTime, float delta)
     {
         if (node == null)
         {
             return;
         }
-        
+
         if (!node.IsVisible)
         {
             return;
         }
-        
+
         if (node.Type == UserInterfaceNodeType.HStack)
         {
             var stack = (HStack)node;
@@ -303,7 +300,7 @@ public class UserInterfaceRenderer
             }
         }
 
-        
+
         if (node.Type == UserInterfaceNodeType.VStack)
         {
             var stack = (VStack)node;
@@ -314,7 +311,7 @@ public class UserInterfaceRenderer
                 Draw(child, spriteBatch, gameTime, delta);
             }
         }
-        
+
         if (node.Type == UserInterfaceNodeType.ZStack)
         {
             var stack = (ZStack)node;
@@ -325,44 +322,48 @@ public class UserInterfaceRenderer
                 Draw(child, spriteBatch, gameTime, delta);
             }
         }
-        
+
         if (node.Type == UserInterfaceNodeType.ScrollView)
         {
             var view = (ScrollView)node;
             //spriteBatch.Draw(Context.Pixel, new Rectangle((int)stack.X, (int)stack.Y, (int)stack.Width, (int)stack.Height), stack.Tint * stack.Alpha); // Anpassen der Zeichenroutine für die Gesamtbreite
             var prevRect = Context.GraphicsDevice.ScissorRectangle;
-            var scrollViewArea = new Rectangle((int)view.X, (int)view.Y - view.Value, (int)view.Width, (int)view.Height);
-            Context.GraphicsDevice.ScissorRectangle = scrollViewArea;
+            var scrollViewArea =
+                new Rectangle((int)view.X, (int)view.Y - view.Value, (int)view.Width, (int)view.Height);
+            //Context.GraphicsDevice.ScissorRectangle = scrollViewArea;
             foreach (var child in view.Children)
             {
                 Draw(child, spriteBatch, gameTime, delta);
             }
             //Context.GraphicsDevice.ScissorRectangle = prevRect;
         }
-        
+
         if (node.Type == UserInterfaceNodeType.Button)
         {
             var button = (Button)node;
-            spriteBatch.Draw(Context.Pixel, new Rectangle((int)button.X, (int)button.Y, (int)button.Width, (int)button.Height), Color.Black * 0.8f);
+            spriteBatch.Draw(Context.Pixel,
+                new Rectangle((int)button.X, (int)button.Y, (int)button.Width, (int)button.Height), Color.Black * 0.8f);
 
             foreach (var child in button.Children)
             {
                 Draw(child, spriteBatch, gameTime, delta);
             }
         }
-        
+
         if (node.Type == UserInterfaceNodeType.Label)
         {
             var label = (Label)node;
-            spriteBatch.DrawString(Context.Fonts[label.Font], Convert.ToString(label.Text) ?? "", new Vector2(label.X, label.Y), Color.White);
+            spriteBatch.DrawString(Context.Fonts[label.Font], Convert.ToString(label.Text) ?? "",
+                new Vector2(label.X, label.Y), Color.White);
         }
-        
+
         if (node.Type == UserInterfaceNodeType.Image)
         {
             var image = (Image)node;
             if (_images.TryGetValue(image.ImageIdentifier, out var texture))
             {
-                spriteBatch.Draw(texture, new Rectangle((int)image.X, (int)image.Y, (int)image.Width, (int)image.Height), Color.White);
+                spriteBatch.Draw(texture,
+                    new Rectangle((int)image.X, (int)image.Y, (int)image.Width, (int)image.Height), Color.White);
             }
             else
             {
@@ -370,18 +371,19 @@ public class UserInterfaceRenderer
             }
         }
     }
-    
+
     public void HandleInput(UserInterfaceNode node)
     {
         if (node == null)
         {
             return;
         }
-        
+
         if (node.Type == UserInterfaceNodeType.ScrollView)
         {
             var scrollView = (ScrollView)node;
-            var scrollViewArea = new Rectangle((int)scrollView.X, (int)scrollView.Y - scrollView.Value, (int)scrollView.Width, (int)scrollView.Height);
+            var scrollViewArea = new Rectangle((int)scrollView.X, (int)scrollView.Y - scrollView.Value,
+                (int)scrollView.Width, (int)scrollView.Height);
 
             if (scrollViewArea.Contains(Context.Input.GetMousePosition()))
             {
@@ -389,7 +391,7 @@ public class UserInterfaceRenderer
                 scrollView.Value += delta;
             }
         }
-        
+
         if (node.Type == UserInterfaceNodeType.Button)
         {
             var button = (Button)node;
@@ -400,7 +402,7 @@ public class UserInterfaceRenderer
                 button.Invoke();
             }
         }
-        
+
         if (node is UserInterfaceNodeContainer container)
         {
             foreach (var child in container.Children)
@@ -409,7 +411,7 @@ public class UserInterfaceRenderer
             }
         }
     }
-    
+
     public bool HitTest(UserInterfaceNode? node)
     {
         if (node == null)
@@ -421,7 +423,7 @@ public class UserInterfaceRenderer
         {
             return false;
         }
-        
+
         if (!node.IsClickable)
         {
             if (node is UserInterfaceNodeContainer container)
@@ -438,8 +440,10 @@ public class UserInterfaceRenderer
                     }
                 }
             }
+
             return false;
         }
+
         return true;
     }
 }

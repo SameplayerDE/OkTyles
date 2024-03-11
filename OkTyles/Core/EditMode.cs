@@ -4,5 +4,7 @@ public enum EditMode
 {
     Set,
     Remove,
-    Rotate
+    Rotate,
+    Copy,
+    Collision
 }

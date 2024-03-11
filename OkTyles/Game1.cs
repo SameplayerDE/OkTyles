@@ -3,6 +3,7 @@ using System.IO;
 using OkTyles.Core;
 using Bembelbuben.Core;
 using Bembelbuben.Core.Input;
+using Bembelbuben.Core.Rendering;
 using Bembelbuben.Core.UserInterface;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -30,7 +31,7 @@ public class Game1 : Game
     public UserInterfaceNode ActiveNode;
     public UserInterfaceNode WorldMenu;
     public UserInterfaceNode StartUpMenu;
-    
+
     public World World;
     public TileSet TileSet;
     public Camera _prevCamera;
@@ -48,6 +49,7 @@ public class Game1 : Game
 
     public EditorMode EditorMode = EditorMode.StartUp;
     public EditMode EditMode = EditMode.Set;
+    public World.CollisionMask CollisionMaskBrush = World.CollisionMask.Rectangle;
 
     public bool ShowMirrorState = false;
     public int ActiveLayer = 0;
@@ -61,6 +63,7 @@ public class Game1 : Game
     public Binding<object> ActiveLayerBinding;
     public Binding<object> LayerCountBinding;
     public Binding<bool> ShowToolButtons = new(true);
+    public Binding<bool> ShowCollisionRules = new(false);
 
     #endregion
 
@@ -80,6 +83,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        PrimitiveRenderer.Initialise(GraphicsDevice);
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData([Color.White]);
 
@@ -87,13 +91,14 @@ public class Game1 : Game
         _prevCamera = _camera.Copy();
         _uiRenderer = new UserInterfaceRenderer();
         CommandInvoker = new CommandInvoker();
-        
+
         Context.Pixel = _pixel;
         Context.GraphicsDevice = GraphicsDevice;
         Context.Input = new InputHandle();
         Context.ContentManager = Content;
 
-        EditorModeButtonText = new Binding<object>(EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode");
+        EditorModeButtonText =
+            new Binding<object>(EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode");
         ActiveLayerBinding = new Binding<object>(ActiveLayer);
         LayerCountBinding = new Binding<object>(0);
 
@@ -114,13 +119,10 @@ public class Game1 : Game
             )
             .SetPadding(10)
             .SetSpacing(10);
-        
+
         StartUpMenu = new HStack(
                 new Button(new Label("Create Map"))
-                    .OnClick(() =>
-                    {
-                        ActiveNode = NewWorldMenu;
-                    }),
+                    .OnClick(() => { ActiveNode = NewWorldMenu; }),
                 new Button(new Label("Load Map"))
                     .OnClick(() =>
                     {
@@ -132,117 +134,138 @@ public class Game1 : Game
             )
             .SetPadding(10)
             .SetSpacing(10);
-        
+
         WorldMenu = new HStack(
                 new VStack(
-                    new Button(
-                            new Label()
-                            .SetTextBinding(EditorModeButtonText)
-                        )
-                        .OnClick(() =>
-                        {
-                            var temp = _camera.Copy();
-                            _camera = _prevCamera;
-                            _prevCamera = temp;
-                            EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
-                            EditorModeButtonText.Value =
-                                EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
-                            ShowToolButtons.Value = EditorMode == EditorMode.World;
-                        }),
-                    new HStack(
                         new Button(
-                                new Label("Set")
+                                new Label()
+                                    .SetTextBinding(EditorModeButtonText)
                             )
                             .OnClick(() =>
                             {
-                                EditMode = EditMode.Set;
+                                var temp = _camera.Copy();
+                                _camera = _prevCamera;
+                                _prevCamera = temp;
+                                EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
+                                EditorModeButtonText.Value =
+                                    EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
+                                ShowToolButtons.Value = EditorMode == EditorMode.World;
+                            }),
+                        new HStack(
+                            new Button(
+                                    new Label("Set")
+                                )
+                                .OnClick(() => { EditMode = EditMode.Set; })
+                                .SetVisibilityBinding(ShowToolButtons)
+                        ),
+                        new Button(
+                                new Label("Remove")
+                            )
+                            .OnClick(() => { EditMode = EditMode.Remove; })
+                            .SetVisibilityBinding(ShowToolButtons),
+                        new Button(
+                                new Label("Rotate")
+                            )
+                            .OnClick(() => { EditMode = EditMode.Rotate; })
+                            .SetVisibilityBinding(ShowToolButtons),
+                        new Button(
+                                new Label("Copy")
+                            )
+                            .SetVisibilityBinding(ShowToolButtons),
+                        new Button(
+                                new Label("Collisions")
+                            )
+                            .OnClick(() =>
+                            {
+                                EditMode = EditMode.Collision;
+                                CollisionMaskBrush = World.CollisionMask.None;
                             })
-                            .SetVisibilityBinding(ShowToolButtons)
-                    ),
-                    new Button(
-                            new Label("Remove")
-                        )
-                        .OnClick(() =>
-                        {
-                            EditMode = EditMode.Remove;
-                        })
-                        .SetVisibilityBinding(ShowToolButtons),
-                    new Button(
-                            new Label("Rotate")
-                        )
-                        .OnClick(() =>
-                        {
-                            EditMode = EditMode.Rotate;
-                        })
-                        .SetVisibilityBinding(ShowToolButtons),
-                    new Button(
-                            new Label("Copy")
-                        )
-                        .SetVisibilityBinding(ShowToolButtons),
-                    new ScrollView(
+                            .SetVisibilityBinding(ShowToolButtons),
+                        new VStack(
+                                new Label("Shapes"),
+                                new Button(
+                                    new Label("Full")
+                                )
+                                .OnClick(() =>
+                                {
+                                    CollisionMaskBrush = World.CollisionMask.Rectangle;
+                                }),
+                                new Button(
+                                    new Label("Circle")
+                                )
+                                .OnClick(() =>
+                                {
+                                    CollisionMaskBrush = World.CollisionMask.Circle;
+                                }),
+                                new Button(
+                                    new Label("Slope Top Left")
+                                ),
+                                new Button(
+                                    new Label("Slope Top Right")
+                                )
+                            )
+                            .SetSpacing(5)
+                            .SetVisibilityBinding(ShowCollisionRules),
                         new VStack(
                                 new Label("Layer Settings")
                                     .SetVisibilityBinding(ShowToolButtons),
                                 new HStack(
-                                    new VStack(
-                                        new Button(
-                                                new Label("Add")
+                                        new VStack(
+                                                new Button(
+                                                        new Label("Add")
+                                                    )
+                                                    .OnClick(() => { World.AddLayer(++ActiveLayer); })
+                                                    .SetVisibilityBinding(ShowToolButtons),
+                                                new Button(
+                                                        new Label("Remove")
+                                                    )
+                                                    .OnClick(() =>
+                                                    {
+                                                        if (World.LayerCount > 1)
+                                                        {
+                                                            World.RemoveLayer(ActiveLayer);
+                                                            ActiveLayer = Math.Max(ActiveLayer - 1, 0);
+                                                        }
+                                                    })
+                                                    .SetVisibilityBinding(ShowToolButtons)
                                             )
-                                            .OnClick(() =>
-                                            {
-                                                World.AddLayer(++ActiveLayer);
-                                            })
-                                            .SetVisibilityBinding(ShowToolButtons),
-                                        new Button(
-                                                new Label("Remove")
-                                            )
-                                            .OnClick(() =>
-                                            {
-                                                if (World.LayerCount > 1)
-                                                {
-                                                    World.RemoveLayer(ActiveLayer);
-                                                    ActiveLayer = Math.Max(ActiveLayer - 1, 0);
-                                                    
-                                                }
-                                            })
-                                            .SetVisibilityBinding(ShowToolButtons)
-                                        )
-                                        .SetSpacing(5),
+                                            .SetSpacing(5),
                                         new Label()
                                             .SetTextBinding(LayerCountBinding)
                                             .SetVisibilityBinding(ShowToolButtons)
                                     )
                                     .SetAlignment(Alignment.Center),
                                 new HStack(
-                                    new VStack(
-                                        new Button(
-                                                new Label("Up")
+                                        new VStack(
+                                                new Button(
+                                                        new Label("Up")
+                                                    )
+                                                    .OnClick(() =>
+                                                    {
+                                                        ActiveLayer = Math.Clamp(++ActiveLayer, 0,
+                                                            World.LayerCount - 1);
+                                                    })
+                                                    .SetVisibilityBinding(ShowToolButtons),
+                                                new Button(
+                                                        new Label("Down")
+                                                    )
+                                                    .OnClick(() =>
+                                                    {
+                                                        ActiveLayer = Math.Clamp(--ActiveLayer, 0,
+                                                            World.LayerCount - 1);
+                                                    })
+                                                    .SetVisibilityBinding(ShowToolButtons)
                                             )
-                                            .OnClick(() =>
-                                            {
-                                                ActiveLayer = Math.Clamp(++ActiveLayer, 0, World.LayerCount - 1);
-                                            })
-                                            .SetVisibilityBinding(ShowToolButtons),
-                                        new Button(
-                                                new Label("Down")
-                                            )
-                                            .OnClick(() =>
-                                            {
-                                                ActiveLayer = Math.Clamp(--ActiveLayer, 0, World.LayerCount - 1);
-                                                
-                                            })
+                                            .SetSpacing(5),
+                                        new Label()
+                                            .SetTextBinding(ActiveLayerBinding)
                                             .SetVisibilityBinding(ShowToolButtons)
                                     )
-                                    .SetSpacing(5),
-                                    new Label()
-                                        .SetTextBinding(ActiveLayerBinding)
-                                        .SetVisibilityBinding(ShowToolButtons)
-                                )
-                                .SetAlignment(Alignment.Center),
+                                    .SetAlignment(Alignment.Center),
                                 new HStack(
                                         new VStack(
                                                 new Button(
-                                                        new Label("Swap Layer Up")
+                                                        new Label("Move Up")
                                                     )
                                                     .OnClick(() =>
                                                     {
@@ -252,13 +275,16 @@ public class Game1 : Game
 
                                                         if (switchLayer < maxLayers)
                                                         {
-                                                            (World.Layers[switchLayer], World.Layers[currentLayer]) = (World.Layers[currentLayer], World.Layers[switchLayer]);
+                                                            (World.Layers[switchLayer],
+                                                                World.Layers[currentLayer]) = (
+                                                                World.Layers[currentLayer],
+                                                                World.Layers[switchLayer]);
                                                             ActiveLayer = switchLayer;
                                                         }
                                                     })
                                                     .SetVisibilityBinding(ShowToolButtons),
                                                 new Button(
-                                                        new Label("Swap Layer Down")
+                                                        new Label("Move Down")
                                                     )
                                                     .OnClick(() =>
                                                     {
@@ -268,7 +294,10 @@ public class Game1 : Game
 
                                                         if (switchLayer >= 0)
                                                         {
-                                                            (World.Layers[switchLayer], World.Layers[currentLayer]) = (World.Layers[currentLayer], World.Layers[switchLayer]);
+                                                            (World.Layers[switchLayer],
+                                                                World.Layers[currentLayer]) = (
+                                                                World.Layers[currentLayer],
+                                                                World.Layers[switchLayer]);
                                                             ActiveLayer = switchLayer;
                                                         }
                                                     })
@@ -280,17 +309,13 @@ public class Game1 : Game
                                 new Button(
                                         new Label("Toogle Render Mode")
                                     )
-                                    .OnClick(() =>
-                                    {
-                                        ShowAllLayers = !ShowAllLayers;
-                                    })
+                                    .OnClick(() => { ShowAllLayers = !ShowAllLayers; })
                                     .SetVisibilityBinding(ShowToolButtons)
                             )
                             .SetSpacing(15)
                             .SetPaddingTop(25)
                     )
-                )
-                .SetSpacing(10),
+                    .SetSpacing(10),
                 new Button(
                         new Label("Save The Map")
                     )
@@ -299,21 +324,18 @@ public class Game1 : Game
                 new Button(
                         new Label("Export Each Laye As Image")
                     )
-                    .OnClick(() =>
-                    {
-                        SaveLayersAsTextures();
-                    })
+                    .OnClick(() => { SaveLayersAsTextures(); })
                     .SetVisibilityBinding(ShowToolButtons)
             )
             .SetSpacing(10)
             .SetPadding(10);
 
-        
+
         ActiveNode = WorldMenu;
         World = WorldLoader.ReadFromFile("Assets/output.json");
         TileSet = TileSet.ReadFromFile("Assets/tileSet.json");
         EditorMode = EditorMode.World;
-        
+
         base.Initialize();
     }
 
@@ -323,7 +345,8 @@ public class Game1 : Game
         _font = Content.Load<SpriteFont>("default_font");
 
         _uiRenderer.ButtonTile = EditorUtils.LoadTextureFromPath("Assets/button_nt.png", Context.GraphicsDevice);
-        _uiRenderer.AddImage("microsoft", EditorUtils.LoadTextureFromPath("Assets/Microsoft.png", Context.GraphicsDevice));
+        _uiRenderer.AddImage("microsoft",
+            EditorUtils.LoadTextureFromPath("Assets/Microsoft.png", Context.GraphicsDevice));
         _uiRenderer.AddImage("lists", EditorUtils.LoadTextureFromPath("Assets/Lists.png", Context.GraphicsDevice));
         _uiRenderer.AddImage("search", EditorUtils.LoadTextureFromPath("Assets/Search.png", Context.GraphicsDevice));
 
@@ -332,21 +355,18 @@ public class Game1 : Game
         Context.Fonts["fa-regular"] = Content.Load<SpriteFont>("faRegular");
 
         LayerCountBinding.Value = World.LayerCount;
-        
-        _camera.X = -Context.GraphicsDevice.Viewport.Bounds.Center.X;
-        _camera.Y = -Context.GraphicsDevice.Viewport.Bounds.Center.Y;
 
+        //_camera.X = -Context.GraphicsDevice.Viewport.Bounds.Center.X;
+        //_camera.Y = -Context.GraphicsDevice.Viewport.Bounds.Center.Y;
+        //
         _camera.X += World.Width * World.TileSize / 2f;
         _camera.Y += World.Height * World.TileSize / 2f;
-        
+
         _prevCamera.X = -Context.GraphicsDevice.Viewport.Bounds.Center.X;
         _prevCamera.Y = -Context.GraphicsDevice.Viewport.Bounds.Center.Y;
 
         _prevCamera.X += TileSet.TilesPerRow * TileSet.TileWidth / 2f;
         _prevCamera.Y += TileSet.TilesPerColumn * TileSet.TileHeight / 2f;
-        
-        
-        
     }
 
     protected override void Update(GameTime gameTime)
@@ -364,9 +384,10 @@ public class Game1 : Game
         {
             Console.WriteLine(Context.Input.GetMousePosition());
         }
-        
+
         _uiRenderer.CalculateLayout(ActiveNode);
-        if (Context.Input.GetMousePosition().Y > 0 && GraphicsDevice.Viewport.Bounds.Contains(Context.Input.GetMousePosition()))
+        if (Context.Input.GetMousePosition().Y > 0 &&
+            GraphicsDevice.Viewport.Bounds.Contains(Context.Input.GetMousePosition()))
         {
             var result = _uiRenderer.HitTest(ActiveNode);
             Console.WriteLine(result);
@@ -379,9 +400,8 @@ public class Game1 : Game
                 HandleInput();
             }
         }
+
         _uiRenderer.CalculateLayout(ActiveNode);
-        
-        _camera.Update(gameTime, _delta);
 
         if (EditMode == EditMode.Rotate && !ShowMirrorState)
         {
@@ -392,8 +412,28 @@ public class Game1 : Game
             ShowMirrorState = false;
         }
         
+        if (EditMode == EditMode.Collision && !ShowCollisionRules.Value)
+        {
+            ShowCollisionRules.Value = true;
+        }
+        else if (EditMode != EditMode.Collision && ShowCollisionRules.Value)
+        {
+            ShowCollisionRules.Value = false;
+        }
+
         ActiveLayerBinding.Value = ActiveLayer + 1;
         LayerCountBinding.Value = World.LayerCount;
+
+        _camera.Update(gameTime, _delta);
+
+        Console.WriteLine(_camera.Zoom);
+        Console.WriteLine(_camera.X);
+        Console.WriteLine(_camera.Y);
+        Console.WriteLine("-----");
+        
+        //PrimitiveRenderer.Scale = 1 / _camera.Zoom;
+        //PrimitiveRenderer.ViewOffset = new Vector3(_camera.X, _camera.Y, 0);
+        //PrimitiveRenderer.UpdateDefaultCamera();
         
         base.Update(gameTime);
     }
@@ -401,14 +441,31 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Theme.DarkerBrown);
-        
+
         DrawWithMatrix(_spriteBatch, gameTime, _delta);
+
+        //if (EditMode == EditMode.Collision)
+        //{
+        //    for (int y = 0; y < World.Height; y++)
+        //    {
+        //        for (int x = 0; x < World.Width; x++)
+        //        {
+        //            World.CollisionMask collisionMask = World.GetTileCollision(x, y, ActiveLayer);
+        //            if (collisionMask != 0u)
+        //            {
+        //                PrimitiveRenderer.DrawRectF(
+        //                    null,
+        //                    Color.White, 
+        //                    new Rectangle(x, y, World.TileSize, World.TileSize)
+        //                );
+        //            }
+        //        }
+        //    }
+        //}
+        
         DrawWithoutMatrix(_spriteBatch, gameTime, _delta);
 
-        _spriteBatch.Begin(SpriteSortMode.Texture);
-
-        _spriteBatch.End();
-
+        
         base.Draw(gameTime);
     }
 
@@ -430,9 +487,10 @@ public class Game1 : Game
             {
                 continue; // Springe zum nächsten Layer, wenn dieser keine Daten enthält
             }
-            
+
             // Erstelle eine Render-Target-Texture für den aktuellen Layer
-            RenderTarget2D layerTexture = new RenderTarget2D(GraphicsDevice, World.Width * World.TileSize, World.Height * World.TileSize);
+            RenderTarget2D layerTexture = new RenderTarget2D(GraphicsDevice, World.Width * World.TileSize,
+                World.Height * World.TileSize);
 
             // Setze das Renderziel auf die aktuelle Layer-Texture
             GraphicsDevice.SetRenderTarget(layerTexture);
@@ -458,7 +516,7 @@ public class Game1 : Game
             }
         }
     }
-    
+
     private bool CheckLayerForData(int layerIndex)
     {
         for (int y = 0; y < World.Height; y++)
@@ -472,6 +530,7 @@ public class Game1 : Game
                 }
             }
         }
+
         return false; // Der Layer enthält keine Kachel-Daten
     }
 
@@ -484,7 +543,8 @@ public class Game1 : Game
                 uint tileId = World.GetTileTexture(x, y, layerIndex);
                 if (tileId != 0u)
                 {
-                    Rectangle tileSrc = GetSourceRectangle(tileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                    Rectangle tileSrc =
+                        GetSourceRectangle(tileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
                     _spriteBatch.Draw(TileSet.Texture2D, (new Vector2(x, y) * World.TileSize).ToPoint().ToVector2(),
                         tileSrc, Color.White, 0f, Vector2.Zero, Vector2.One,
                         (SpriteEffects)World.GetTileMirror(x, y, layerIndex), 0f);
@@ -492,7 +552,7 @@ public class Game1 : Game
             }
         }
     }
-    
+
     private int GetSelectedCellX()
     {
         Vector2 mousePosition = Context.Input.GetMousePosition().ToVector2();
@@ -593,7 +653,7 @@ public class Game1 : Game
                 CommandInvoker.Undo();
             }
         }
-        
+
         if (Context.Input.IsLeftMouseDown())
         {
             if (InBounds)
@@ -611,7 +671,8 @@ public class Game1 : Game
                     var oldTile = World.GetTileTexture(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
                     if (oldTile != SelectedTileId && SelectedTileId != 0u)
                     {
-                        var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                        var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(),
+                            ActiveLayer,
                             oldTile, SelectedTileId);
                         CommandInvoker.ExecuteCommand(command);
                     }
@@ -623,7 +684,8 @@ public class Game1 : Game
                         var oldTile = World.GetTileData(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
                         if (oldTile != 0u)
                         {
-                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(),
+                                ActiveLayer,
                                 oldTile, 0u);
                             CommandInvoker.ExecuteCommand(command);
                         }
@@ -631,7 +693,7 @@ public class Game1 : Game
                 }
             }
         }
-        
+
         if (Context.Input.IsLeftMousePressed())
         {
             if (InBounds)
@@ -645,7 +707,8 @@ public class Game1 : Game
                         var newTile = World.GetTileData(GetSelectedCellX(), GetSelectedCellY(), ActiveLayer);
                         if (oldTile != newTile)
                         {
-                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(), ActiveLayer,
+                            var command = new ChangeTileDataCommand(World, GetSelectedCellX(), GetSelectedCellY(),
+                                ActiveLayer,
                                 oldTile, newTile);
                             CommandInvoker.ExecuteCommand(command);
                         }
@@ -661,6 +724,7 @@ public class Game1 : Game
             {
                 WorldLoader.WriteToFile(World, "Assets/output.json");
             }
+
             if (Context.Input.IsKeyPressed(Keys.F1))
             {
                 SaveLayersAsTextures();
@@ -802,14 +866,13 @@ public class Game1 : Game
 
     protected void DrawWithMatrix(SpriteBatch spriteBatch, GameTime gameTime, float delta)
     {
-        
         if (World == null && TileSet == null)
         {
             return;
         }
-        
-        spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.TransformationMatrix);
-        
+
+        spriteBatch.Begin(samplerState: SamplerState.PointWrap, transformMatrix: _camera.TransformationMatrix);
+
         if (EditorMode == EditorMode.World)
         {
             DrawWorldMode(spriteBatch, gameTime, delta);
@@ -825,7 +888,7 @@ public class Game1 : Game
 
     protected void DrawWithoutMatrix(SpriteBatch spriteBatch, GameTime gameTime, float delta)
     {
-        spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp, rasterizerState: new RasterizerState { ScissorTestEnable = true });
+        spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp);
         DrawUserInterface(spriteBatch, gameTime, delta);
         _uiRenderer.Draw(ActiveNode, _spriteBatch, gameTime, _delta);
         spriteBatch.End();
@@ -953,9 +1016,11 @@ public class Game1 : Game
                         if (EditMode == EditMode.Set)
                         {
                             Rectangle tileSrc =
-                                GetSourceRectangle(SelectedTileId, World.TileSize, TileSet.TilesPerRow * World.TileSize);
+                                GetSourceRectangle(SelectedTileId, World.TileSize,
+                                    TileSet.TilesPerRow * World.TileSize);
                             spriteBatch.Draw(TileSet.Texture2D,
-                                (new Vector2(GetSelectedCellX(), GetSelectedCellY()) * World.TileSize).ToPoint().ToVector2(),
+                                (new Vector2(GetSelectedCellX(), GetSelectedCellY()) * World.TileSize).ToPoint()
+                                .ToVector2(),
                                 tileSrc, Color.White * (float)Math.Abs(Math.Sin(gameTime.TotalGameTime.TotalSeconds)));
                         }
                     }
