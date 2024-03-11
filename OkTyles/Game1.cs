@@ -183,41 +183,41 @@ public class Game1 : Game
                             })
                             .SetVisibilityBinding(ShowToolButtons),
                         new VStack(
-                            new VStack(
-                                    new Label("Shapes"),
-                                    new Button(
-                                            new Label("None")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.None; }),
-                                    new Button(
-                                            new Label("Full")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Rectangle; }),
-                                    new Button(
-                                            new Label("Circle")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Circle; }),
-                                    new Button(
-                                            new Label("Slope Top Left")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTL; }),
-                                    new Button(
-                                            new Label("Slope Top Right")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTR; }),
-                                    new Button(
-                                            new Label("Slope Bottom Left")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBL; }),
-                                    new Button(
-                                            new Label("Slope Bottom Right")
-                                        )
-                                        .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBR; })
-                                )
-                                .SetSpacing(5)
-                                .SetVisibilityBinding(ShowCollisionRules)
-                        )
-                        .SetVisibilityBinding(ShowToolButtons),
+                                new VStack(
+                                        new Label("Shapes"),
+                                        new Button(
+                                                new Label("None")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.None; }),
+                                        new Button(
+                                                new Label("Full")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Rectangle; }),
+                                        new Button(
+                                                new Label("Circle")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Circle; }),
+                                        new Button(
+                                                new Label("Slope Top Left")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTL; }),
+                                        new Button(
+                                                new Label("Slope Top Right")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTR; }),
+                                        new Button(
+                                                new Label("Slope Bottom Left")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBL; }),
+                                        new Button(
+                                                new Label("Slope Bottom Right")
+                                            )
+                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBR; })
+                                    )
+                                    .SetSpacing(5)
+                                    .SetVisibilityBinding(ShowCollisionRules)
+                            )
+                            .SetVisibilityBinding(ShowToolButtons),
                         new VStack(
                                 new Label("Layer Settings")
                                     .SetVisibilityBinding(ShowToolButtons),
@@ -452,52 +452,169 @@ public class Game1 : Game
 
         if (EditMode == EditMode.Collision && EditorMode == EditorMode.World)
         {
-            for (int y = 0; y < World.Height; y++)
+            if (InBounds)
             {
-                for (int x = 0; x < World.Width; x++)
-                {
-                    World.CollisionMask collisionMask = World.GetTileCollision(x, y, ActiveLayer);
-                    if (collisionMask != 0u)
-                    {
-                        if (collisionMask == World.CollisionMask.Rectangle)
-                        {
-                            PrimitiveRenderer.DrawRectF(
-                                null,
-                                Color.Red * 0.5f,
-                                new Rectangle(x * World.TileSize, y * World.TileSize, World.TileSize, World.TileSize)
-                            );
-                        }
-
-                        if (collisionMask == World.CollisionMask.Circle)
-                        {
-                            PrimitiveRenderer.DrawCircleF(
-                                null,
-                                Color.Red * 0.5f,
-                                new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
-                                World.TileSize / 2,
-                                2
-                            );
-                        }
-
-                        if (collisionMask == World.CollisionMask.SlopeTL)
-                        {
-                            PrimitiveRenderer.DrawTriangleF(
-                                null,
-                                Color.Red * 0.5f,
-                                new Vector2(x * World.TileSize, y * World.TileSize),
-                                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
-                                new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
-                            );
-                        }
-                    }
-                }
+                DrawCollisionSelection(gameTime, _delta);
             }
+
+            DrawCollisionLayer(gameTime, _delta);
         }
 
         DrawWithoutMatrix(_spriteBatch, gameTime, _delta);
 
 
         base.Draw(gameTime);
+    }
+
+    private void DrawCollisionSelection(GameTime gameTime, float delta)
+    {
+        
+                int x = GetSelectedCellX();
+                int y = GetSelectedCellY();
+                Color color = Color.Black * 0.25f;
+
+                //Draw selection
+                if (CollisionMaskBrush == World.CollisionMask.Rectangle)
+                {
+                    PrimitiveRenderer.DrawRectF(
+                        null,
+                        color,
+                        new Rectangle(GetSelectedCellX() * World.TileSize, GetSelectedCellY() * World.TileSize,
+                            World.TileSize, World.TileSize)
+                    );
+                }
+
+                if (CollisionMaskBrush == World.CollisionMask.Circle)
+                {
+                    PrimitiveRenderer.DrawCircleF(
+                        null,
+                        color,
+                        new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
+                        World.TileSize / 2,
+                        2
+                    );
+                }
+
+                if (CollisionMaskBrush == World.CollisionMask.SlopeTL)
+                {
+                    PrimitiveRenderer.DrawTriangleF(
+                        null,
+                        color,
+                        new Vector2(x * World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                    );
+                }
+
+                if (CollisionMaskBrush == World.CollisionMask.SlopeTR)
+                {
+                    PrimitiveRenderer.DrawTriangleF(
+                        null,
+                        color,
+                        new Vector2(x * World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize)
+                    );
+                }
+
+                if (CollisionMaskBrush == World.CollisionMask.SlopeBL)
+                {
+                    PrimitiveRenderer.DrawTriangleF(
+                        null,
+                        color,
+                        new Vector2(x * World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                    );
+                }
+
+                if (CollisionMaskBrush == World.CollisionMask.SlopeBR)
+                {
+                    PrimitiveRenderer.DrawTriangleF(
+                        null,
+                        color,
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                    );
+                }
+    }
+
+    private void DrawCollisionLayer(GameTime gameTime, float delta)
+    {
+        for (int y = 0; y < World.Height; y++)
+        {
+            for (int x = 0; x < World.Width; x++)
+            {
+                World.CollisionMask collisionMask = World.GetTileCollision(x, y, ActiveLayer);
+                if (collisionMask != 0u)
+                {
+                    if (collisionMask == World.CollisionMask.Rectangle)
+                    {
+                        PrimitiveRenderer.DrawRectF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Rectangle(x * World.TileSize, y * World.TileSize, World.TileSize, World.TileSize)
+                        );
+                    }
+
+                    if (collisionMask == World.CollisionMask.Circle)
+                    {
+                        PrimitiveRenderer.DrawCircleF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
+                            World.TileSize / 2,
+                            2
+                        );
+                    }
+
+                    if (collisionMask == World.CollisionMask.SlopeTL)
+                    {
+                        PrimitiveRenderer.DrawTriangleF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Vector2(x * World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                        );
+                    }
+
+                    if (collisionMask == World.CollisionMask.SlopeTR)
+                    {
+                        PrimitiveRenderer.DrawTriangleF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Vector2(x * World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize)
+                        );
+                    }
+
+                    if (collisionMask == World.CollisionMask.SlopeBL)
+                    {
+                        PrimitiveRenderer.DrawTriangleF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Vector2(x * World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                            new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                        );
+                    }
+
+                    if (collisionMask == World.CollisionMask.SlopeBR)
+                    {
+                        PrimitiveRenderer.DrawTriangleF(
+                            null,
+                            Color.Red * 0.5f,
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                            new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                            new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+                        );
+                    }
+                }
+            }
+        }
     }
 
     private void SaveLayersAsTextures()
