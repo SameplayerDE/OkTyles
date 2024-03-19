@@ -62,8 +62,18 @@ public class Game1 : Game
     public Binding<object> EditorModeButtonText;
     public Binding<object> ActiveLayerBinding;
     public Binding<object> LayerCountBinding;
-    public Binding<bool> ShowToolButtons = new(true);
     public Binding<bool> ShowCollisionRules = new(false);
+    public Binding<bool> ShowNavigationMenu = new(true);
+    public Binding<bool> ShowToolMenu = new(false);
+    public Binding<bool> ShowExtraMenu = new(false);
+    public Binding<bool> ShowWorldButtons = new(true);
+
+
+    public UserInterfaceNode MenuHeader;
+
+    public UserInterfaceNode NavigationMenu;
+    public UserInterfaceNode ToolMenu;
+    public UserInterfaceNode ExtraMenu;
 
     #endregion
 
@@ -103,6 +113,191 @@ public class Game1 : Game
         ActiveLayerBinding = new Binding<object>(ActiveLayer);
         LayerCountBinding = new Binding<object>(0);
 
+        NavigationMenu =
+            new HStack(
+                new Button(
+                        new Label()
+                            .SetTextBinding(EditorModeButtonText)
+                    )
+                    .OnClick(() =>
+                    {
+                        var temp = _camera.Copy();
+                        _camera = _prevCamera;
+                        _prevCamera = temp;
+                        EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
+                        EditorModeButtonText.Value =
+                            EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
+                        ShowWorldButtons.Value = EditorMode == EditorMode.World;
+                    })
+            );
+
+        ToolMenu =
+            new VStack(
+                    new Button(
+                            new Label("Set")
+                        )
+                        .OnClick(() => { EditMode = EditMode.Set; }),
+                    new Button(
+                            new Label("Remove")
+                        )
+                        .OnClick(() => { EditMode = EditMode.Remove; }),
+                    new Button(
+                            new Label("Rotate")
+                        )
+                        .OnClick(() => { EditMode = EditMode.Rotate; }),
+                    new Button(
+                            new Label("Collisions")
+                        )
+                        .OnClick(() =>
+                        {
+                            EditMode = EditMode.Collision;
+                            CollisionMaskBrush = World.CollisionMask.None;
+                        }),
+                    new VStack(
+                        new VStack(
+                                new Label("Shapes"),
+                                new Button(
+                                        new Label("None")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.None; }),
+                                new Button(
+                                        new Label("Full")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Rectangle; }),
+                                new Button(
+                                        new Label("Circle")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Circle; }),
+                                new Button(
+                                        new Label("Slope Top Left")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTL; }),
+                                new Button(
+                                        new Label("Slope Top Right")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTR; }),
+                                new Button(
+                                        new Label("Slope Bottom Left")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBL; }),
+                                new Button(
+                                        new Label("Slope Bottom Right")
+                                    )
+                                    .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBR; })
+                            )
+                            .SetSpacing(5)
+                            .SetVisibilityBinding(ShowCollisionRules)
+                    )
+                )
+                .SetSpacing(5);
+
+        ExtraMenu =
+            new VStack(
+                    new VStack(
+                        new Button(
+                                new Label("Save The Map")
+                            )
+                            .OnClick(() => { WorldLoader.WriteToFile(World, "Assets/output.json"); })
+                            .SetVisibilityBinding(ShowWorldButtons),
+                        new Button(
+                                new Label("Export Each Laye As Image")
+                            )
+                            .OnClick(() => { SaveLayersAsTextures(); })
+                            .SetVisibilityBinding(ShowWorldButtons)
+                    ).SetSpacing(5),
+                    new VStack(
+                            new Label("Layer Settings"),
+                            new HStack(
+                                    new VStack(
+                                        new Button(
+                                                new Label("Add")
+                                            )
+                                            .OnClick(() => { World.AddLayer(++ActiveLayer); }),
+                                        new Button(
+                                                new Label("Remove")
+                                            )
+                                            .OnClick(() =>
+                                            {
+                                                if (World.LayerCount > 1)
+                                                {
+                                                    World.RemoveLayer(ActiveLayer);
+                                                    ActiveLayer = Math.Max(ActiveLayer - 1, 0);
+                                                }
+                                            })
+                                    ),
+                                    new Label()
+                                        .SetTextBinding(LayerCountBinding)
+                                )
+                                .SetAlignment(Alignment.Center),
+                            new HStack(
+                                    new VStack(
+                                        new Button(
+                                                new Label("Up")
+                                            )
+                                            .OnClick(() =>
+                                            {
+                                                ActiveLayer = Math.Clamp(++ActiveLayer, 0,
+                                                    World.LayerCount - 1);
+                                            }),
+                                        new Button(
+                                                new Label("Down")
+                                            )
+                                            .OnClick(() =>
+                                            {
+                                                ActiveLayer = Math.Clamp(--ActiveLayer, 0,
+                                                    World.LayerCount - 1);
+                                            })
+                                    ),
+                                    new Label()
+                                        .SetTextBinding(ActiveLayerBinding)
+                                )
+                                .SetAlignment(Alignment.Center),
+                            new HStack(
+                                    new VStack(
+                                        new Button(
+                                                new Label("Swap Layer Up")
+                                            )
+                                            .OnClick(() =>
+                                            {
+                                                var maxLayers = World.LayerCount;
+                                                var currentLayer = ActiveLayer;
+                                                var switchLayer = ActiveLayer + 1;
+
+                                                if (switchLayer < maxLayers)
+                                                {
+                                                    (World.Layers[switchLayer], World.Layers[currentLayer]) = (
+                                                        World.Layers[currentLayer], World.Layers[switchLayer]);
+                                                    ActiveLayer = switchLayer;
+                                                }
+                                            }),
+                                        new Button(
+                                                new Label("Swap Layer Down")
+                                            )
+                                            .OnClick(() =>
+                                            {
+                                                var maxLayers = World.LayerCount;
+                                                var currentLayer = ActiveLayer;
+                                                var switchLayer = ActiveLayer - 1;
+
+                                                if (switchLayer >= 0)
+                                                {
+                                                    (World.Layers[switchLayer], World.Layers[currentLayer]) = (
+                                                        World.Layers[currentLayer], World.Layers[switchLayer]);
+                                                    ActiveLayer = switchLayer;
+                                                }
+                                            })
+                                    )
+                                )
+                                .SetAlignment(Alignment.Center),
+                            new Button(
+                                    new Label("Toogle Render Mode")
+                                )
+                                .OnClick(() => { ShowAllLayers = !ShowAllLayers; })
+                        )
+                        .SetSpacing(5)
+                )
+                .SetSpacing(10);
+
         NewWorldMenu = new VStack(
                 new Label("New World"),
                 new VStack(
@@ -136,214 +331,51 @@ public class Game1 : Game
             .SetPadding(10)
             .SetSpacing(10);
 
-        WorldMenu = new HStack(
-                new VStack(
-                        new Button(
-                                new Label()
-                                    .SetTextBinding(EditorModeButtonText)
-                            )
-                            .OnClick(() =>
-                            {
-                                var temp = _camera.Copy();
-                                _camera = _prevCamera;
-                                _prevCamera = temp;
-                                EditorMode = EditorMode == EditorMode.Tiles ? EditorMode.World : EditorMode.Tiles;
-                                EditorModeButtonText.Value =
-                                    EditorMode == EditorMode.Tiles ? "Go To World Mode" : "Go To Tile Mode";
-                                ShowToolButtons.Value = EditorMode == EditorMode.World;
-                            }),
-                        new HStack(
+        MenuHeader =
+            new VStack(
+                    new HStack(
                             new Button(
-                                    new Label("Set")
+                                    new Label("Navigation")
                                 )
-                                .OnClick(() => { EditMode = EditMode.Set; })
-                                .SetVisibilityBinding(ShowToolButtons)
-                        ),
-                        new Button(
-                                new Label("Remove")
-                            )
-                            .OnClick(() => { EditMode = EditMode.Remove; })
-                            .SetVisibilityBinding(ShowToolButtons),
-                        new Button(
-                                new Label("Rotate")
-                            )
-                            .OnClick(() => { EditMode = EditMode.Rotate; })
-                            .SetVisibilityBinding(ShowToolButtons),
-                        new Button(
-                                new Label("Copy")
-                            )
-                            .SetVisibilityBinding(ShowToolButtons),
-                        new Button(
-                                new Label("Collisions")
-                            )
-                            .OnClick(() =>
-                            {
-                                EditMode = EditMode.Collision;
-                                CollisionMaskBrush = World.CollisionMask.None;
-                            })
-                            .SetVisibilityBinding(ShowToolButtons),
-                        new VStack(
-                                new VStack(
-                                        new Label("Shapes"),
-                                        new Button(
-                                                new Label("None")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.None; }),
-                                        new Button(
-                                                new Label("Full")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Rectangle; }),
-                                        new Button(
-                                                new Label("Circle")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.Circle; }),
-                                        new Button(
-                                                new Label("Slope Top Left")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTL; }),
-                                        new Button(
-                                                new Label("Slope Top Right")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeTR; }),
-                                        new Button(
-                                                new Label("Slope Bottom Left")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBL; }),
-                                        new Button(
-                                                new Label("Slope Bottom Right")
-                                            )
-                                            .OnClick(() => { CollisionMaskBrush = World.CollisionMask.SlopeBR; })
-                                    )
-                                    .SetSpacing(5)
-                                    .SetVisibilityBinding(ShowCollisionRules)
-                            )
-                            .SetVisibilityBinding(ShowToolButtons),
-                        new VStack(
-                                new Label("Layer Settings")
-                                    .SetVisibilityBinding(ShowToolButtons),
-                                new HStack(
-                                        new VStack(
-                                                new Button(
-                                                        new Label("Add")
-                                                    )
-                                                    .OnClick(() => { World.AddLayer(++ActiveLayer); })
-                                                    .SetVisibilityBinding(ShowToolButtons),
-                                                new Button(
-                                                        new Label("Remove")
-                                                    )
-                                                    .OnClick(() =>
-                                                    {
-                                                        if (World.LayerCount > 1)
-                                                        {
-                                                            World.RemoveLayer(ActiveLayer);
-                                                            ActiveLayer = Math.Max(ActiveLayer - 1, 0);
-                                                        }
-                                                    })
-                                                    .SetVisibilityBinding(ShowToolButtons)
-                                            )
-                                            .SetSpacing(5),
-                                        new Label()
-                                            .SetTextBinding(LayerCountBinding)
-                                            .SetVisibilityBinding(ShowToolButtons)
-                                    )
-                                    .SetAlignment(Alignment.Center),
-                                new HStack(
-                                        new VStack(
-                                                new Button(
-                                                        new Label("Up")
-                                                    )
-                                                    .OnClick(() =>
-                                                    {
-                                                        ActiveLayer = Math.Clamp(++ActiveLayer, 0,
-                                                            World.LayerCount - 1);
-                                                    })
-                                                    .SetVisibilityBinding(ShowToolButtons),
-                                                new Button(
-                                                        new Label("Down")
-                                                    )
-                                                    .OnClick(() =>
-                                                    {
-                                                        ActiveLayer = Math.Clamp(--ActiveLayer, 0,
-                                                            World.LayerCount - 1);
-                                                    })
-                                                    .SetVisibilityBinding(ShowToolButtons)
-                                            )
-                                            .SetSpacing(5),
-                                        new Label()
-                                            .SetTextBinding(ActiveLayerBinding)
-                                            .SetVisibilityBinding(ShowToolButtons)
-                                    )
-                                    .SetAlignment(Alignment.Center),
-                                new HStack(
-                                        new VStack(
-                                                new Button(
-                                                        new Label("Move Up")
-                                                    )
-                                                    .OnClick(() =>
-                                                    {
-                                                        var maxLayers = World.LayerCount;
-                                                        var currentLayer = ActiveLayer;
-                                                        var switchLayer = ActiveLayer + 1;
-
-                                                        if (switchLayer < maxLayers)
-                                                        {
-                                                            (World.Layers[switchLayer],
-                                                                World.Layers[currentLayer]) = (
-                                                                World.Layers[currentLayer],
-                                                                World.Layers[switchLayer]);
-                                                            ActiveLayer = switchLayer;
-                                                        }
-                                                    })
-                                                    .SetVisibilityBinding(ShowToolButtons),
-                                                new Button(
-                                                        new Label("Move Down")
-                                                    )
-                                                    .OnClick(() =>
-                                                    {
-                                                        var maxLayers = World.LayerCount;
-                                                        var currentLayer = ActiveLayer;
-                                                        var switchLayer = ActiveLayer - 1;
-
-                                                        if (switchLayer >= 0)
-                                                        {
-                                                            (World.Layers[switchLayer],
-                                                                World.Layers[currentLayer]) = (
-                                                                World.Layers[currentLayer],
-                                                                World.Layers[switchLayer]);
-                                                            ActiveLayer = switchLayer;
-                                                        }
-                                                    })
-                                                    .SetVisibilityBinding(ShowToolButtons)
-                                            )
-                                            .SetSpacing(5)
-                                    )
-                                    .SetAlignment(Alignment.Center),
-                                new Button(
-                                        new Label("Toogle Render Mode")
-                                    )
-                                    .OnClick(() => { ShowAllLayers = !ShowAllLayers; })
-                                    .SetVisibilityBinding(ShowToolButtons)
-                            )
-                            .SetSpacing(15)
-                            .SetPaddingTop(25)
-                    )
-                    .SetSpacing(10),
-                new Button(
-                        new Label("Save The Map")
-                    )
-                    .OnClick(() => { WorldLoader.WriteToFile(World, "Assets/output.json"); })
-                    .SetVisibilityBinding(ShowToolButtons),
-                new Button(
-                        new Label("Export Each Laye As Image")
-                    )
-                    .OnClick(() => { SaveLayersAsTextures(); })
-                    .SetVisibilityBinding(ShowToolButtons)
-            )
-            .SetSpacing(10)
-            .SetPadding(10);
+                                .OnClick(() =>
+                                {
+                                    ShowNavigationMenu.Value = true;
+                                    ShowToolMenu.Value = false;
+                                    ShowExtraMenu.Value = false;
+                                }),
+                            new Button(
+                                    new Label("Tools")
+                                )
+                                .OnClick(() =>
+                                {
+                                    ShowToolMenu.Value = true;
+                                    ShowExtraMenu.Value = false;
+                                    ShowNavigationMenu.Value = false;
+                                })
+                                .SetVisibilityBinding(ShowWorldButtons),
+                            new Button(
+                                    new Label("Extras")
+                                )
+                                .OnClick(() =>
+                                {
+                                    ShowExtraMenu.Value = true;
+                                    ShowToolMenu.Value = false;
+                                    ShowNavigationMenu.Value = false;
+                                })
+                                .SetVisibilityBinding(ShowWorldButtons)
+                        )
+                        .SetSpacing(10),
+                    NavigationMenu
+                        .SetVisibilityBinding(ShowNavigationMenu),
+                    ToolMenu
+                        .SetVisibilityBinding(ShowToolMenu),
+                    ExtraMenu
+                        .SetVisibilityBinding(ShowExtraMenu)
+                )
+                .SetSpacing(10);
 
 
-        ActiveNode = WorldMenu;
+        ActiveNode = MenuHeader;
         World = WorldLoader.ReadFromFile("Assets/output.json");
         TileSet = TileSet.ReadFromFile("Assets/tileSet.json");
         EditorMode = EditorMode.World;
@@ -468,76 +500,75 @@ public class Game1 : Game
 
     private void DrawCollisionSelection(GameTime gameTime, float delta)
     {
-        
-                int x = GetSelectedCellX();
-                int y = GetSelectedCellY();
-                Color color = Color.Black * 0.25f;
+        int x = GetSelectedCellX();
+        int y = GetSelectedCellY();
+        Color color = Color.Black * 0.25f;
 
-                //Draw selection
-                if (CollisionMaskBrush == World.CollisionMask.Rectangle)
-                {
-                    PrimitiveRenderer.DrawRectF(
-                        null,
-                        color,
-                        new Rectangle(GetSelectedCellX() * World.TileSize, GetSelectedCellY() * World.TileSize,
-                            World.TileSize, World.TileSize)
-                    );
-                }
+        //Draw selection
+        if (CollisionMaskBrush == World.CollisionMask.Rectangle)
+        {
+            PrimitiveRenderer.DrawRectF(
+                null,
+                color,
+                new Rectangle(GetSelectedCellX() * World.TileSize, GetSelectedCellY() * World.TileSize,
+                    World.TileSize, World.TileSize)
+            );
+        }
 
-                if (CollisionMaskBrush == World.CollisionMask.Circle)
-                {
-                    PrimitiveRenderer.DrawCircleF(
-                        null,
-                        color,
-                        new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
-                        World.TileSize / 2,
-                        2
-                    );
-                }
+        if (CollisionMaskBrush == World.CollisionMask.Circle)
+        {
+            PrimitiveRenderer.DrawCircleF(
+                null,
+                color,
+                new Vector2(x * World.TileSize, y * World.TileSize) + new Vector2(World.TileSize) / 2,
+                World.TileSize / 2,
+                2
+            );
+        }
 
-                if (CollisionMaskBrush == World.CollisionMask.SlopeTL)
-                {
-                    PrimitiveRenderer.DrawTriangleF(
-                        null,
-                        color,
-                        new Vector2(x * World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
-                    );
-                }
+        if (CollisionMaskBrush == World.CollisionMask.SlopeTL)
+        {
+            PrimitiveRenderer.DrawTriangleF(
+                null,
+                color,
+                new Vector2(x * World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+            );
+        }
 
-                if (CollisionMaskBrush == World.CollisionMask.SlopeTR)
-                {
-                    PrimitiveRenderer.DrawTriangleF(
-                        null,
-                        color,
-                        new Vector2(x * World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize)
-                    );
-                }
+        if (CollisionMaskBrush == World.CollisionMask.SlopeTR)
+        {
+            PrimitiveRenderer.DrawTriangleF(
+                null,
+                color,
+                new Vector2(x * World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize)
+            );
+        }
 
-                if (CollisionMaskBrush == World.CollisionMask.SlopeBL)
-                {
-                    PrimitiveRenderer.DrawTriangleF(
-                        null,
-                        color,
-                        new Vector2(x * World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
-                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
-                    );
-                }
+        if (CollisionMaskBrush == World.CollisionMask.SlopeBL)
+        {
+            PrimitiveRenderer.DrawTriangleF(
+                null,
+                color,
+                new Vector2(x * World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+            );
+        }
 
-                if (CollisionMaskBrush == World.CollisionMask.SlopeBR)
-                {
-                    PrimitiveRenderer.DrawTriangleF(
-                        null,
-                        color,
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
-                        new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
-                        new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
-                    );
-                }
+        if (CollisionMaskBrush == World.CollisionMask.SlopeBR)
+        {
+            PrimitiveRenderer.DrawTriangleF(
+                null,
+                color,
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize),
+                new Vector2(x * World.TileSize + World.TileSize, y * World.TileSize + World.TileSize),
+                new Vector2(x * World.TileSize, y * World.TileSize + World.TileSize)
+            );
+        }
     }
 
     private void DrawCollisionLayer(GameTime gameTime, float delta)

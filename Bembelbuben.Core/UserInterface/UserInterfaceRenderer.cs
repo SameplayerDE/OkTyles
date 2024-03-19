@@ -379,6 +379,11 @@ public class UserInterfaceRenderer
             return;
         }
 
+        if (!node.IsVisible)
+        {
+            return;
+        }
+        
         if (node.Type == UserInterfaceNodeType.ScrollView)
         {
             var scrollView = (ScrollView)node;
